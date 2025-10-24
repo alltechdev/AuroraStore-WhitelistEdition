@@ -98,12 +98,19 @@ class DownloadWorker @AssistedInject constructor(
         try {
             download = downloadDao.getDownload(inputData.getString(DownloadHelper.PACKAGE_NAME)!!)
 
-            val response = (httpClient as HttpClient).call(download.iconURL).body
-            val bitmap = BitmapFactory.decodeStream(
-                withContext(Dispatchers.IO) { response.byteStream() }
-            )
-            icon = bitmap.scale(96, 96)
+            // Try to download icon, but don't fail if it doesn't work
+            try {
+                val response = (httpClient as HttpClient).call(download.iconURL).body
+                val bitmap = BitmapFactory.decodeStream(
+                    withContext(Dispatchers.IO) { response.byteStream() }
+                )
+                icon = bitmap.scale(96, 96)
+            } catch (iconException: Exception) {
+                Log.w(TAG, "Failed to download icon for ${download.packageName}, continuing anyway", iconException)
+                // Continue without icon - notification will use default icon
+            }
         } catch (exception: Exception) {
+            Log.e(TAG, "Failed to initialize download for ${download.packageName}", exception)
             return onFailure(exception)
         }
 
@@ -111,12 +118,21 @@ class DownloadWorker @AssistedInject constructor(
         setForeground(getForegroundInfo())
 
         // Try to purchase the app if file list is empty
+        Log.d(TAG, "Download fileList for ${download.packageName}: ${download.fileList.size} files")
+        download.fileList.forEach { file ->
+            Log.d(TAG, "  File: ${file.name} -> ${file.url}")
+        }
+
         download.fileList = download.fileList.ifEmpty {
+            Log.i(TAG, "FileList is empty, attempting purchase for ${download.packageName}")
             purchase(download.packageName, download.versionCode, download.offerType)
         }
 
         // Bail out if file list is empty after purchase
-        if (download.fileList.isEmpty()) return onFailure(NothingToDownloadException())
+        if (download.fileList.isEmpty()) {
+            Log.e(TAG, "No files to download for ${download.packageName}")
+            return onFailure(NothingToDownloadException())
+        }
 
         // Create dirs & generate download request for files and shared libs (if any)
         PathUtil.getAppDownloadDir(context, download.packageName, download.versionCode).mkdirs()
