@@ -138,7 +138,7 @@ Your whitelist JSON must be an array of package names with optional categories:
 - Updates tab ignores categories completely
 - Categories are sorted alphabetically, with "Other" last
 
-#### With External Apps (feature/external-apps branch)
+#### With External Apps
 ```json
 [
   "com.playstore.app Games",
