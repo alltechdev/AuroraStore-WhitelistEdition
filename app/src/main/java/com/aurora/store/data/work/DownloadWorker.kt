@@ -353,7 +353,7 @@ class DownloadWorker @AssistedInject constructor(
         if (!isStopped && !download.isFinished) {
             downloadedBytes += downloadInfo.bytesCopied
 
-            val progress = ((downloadedBytes * 100L) / totalBytes).toInt()
+            val progress = if (totalBytes > 0) ((downloadedBytes * 100L) / totalBytes).toInt() else 0
             val bytesRemaining = totalBytes - downloadedBytes
             val speed = if (downloadInfo.speed == 0L) 1L else downloadInfo.speed
 
