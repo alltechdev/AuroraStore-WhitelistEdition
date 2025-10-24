@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
 import androidx.core.content.getSystemService
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -187,14 +188,16 @@ class UpdateWorker @AssistedInject constructor(
 
         externalApps.forEach { externalApp ->
             // Check if app is installed
-            val installedPackage = PackageUtil.getPackageInfo(context, externalApp.packageName)
-            if (installedPackage != null) {
+            try {
+                val installedPackage = context.packageManager.getPackageInfo(externalApp.packageName, 0)
                 // Compare version codes
-                val installedVersionCode = PackageUtil.getVersionCode(installedPackage)
+                val installedVersionCode = PackageInfoCompat.getLongVersionCode(installedPackage)
                 if (externalApp.versionCode > installedVersionCode) {
                     Log.d(TAG, "External app update available: ${externalApp.displayName} (${installedVersionCode} -> ${externalApp.versionCode})")
                     updates.add(externalApp.toApp())
                 }
+            } catch (e: Exception) {
+                // App not installed, skip
             }
         }
 

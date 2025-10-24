@@ -20,7 +20,8 @@
 package com.aurora.store.data.model
 
 import com.aurora.gplayapi.data.models.App
-import com.aurora.gplayapi.data.models.File
+import com.aurora.gplayapi.data.models.File as PlayFile
+import com.aurora.gplayapi.data.models.FileType
 
 /**
  * Represents an external app not available on Google Play Store
@@ -46,17 +47,17 @@ data class ExternalApp(
             versionName = versionName,
             versionCode = versionCode,
             iconArtwork = iconUrl?.let {
-                com.aurora.gplayapi.data.models.Artwork().apply {
+                com.aurora.gplayapi.data.models.Artwork(
                     url = it
-                }
+                )
             } ?: com.aurora.gplayapi.data.models.Artwork(),
             fileList = listOf(
-                File().apply {
-                    url = apkUrl
-                    name = "$packageName.apk"
-                    size = 0 // Unknown size until download starts
-                    type = com.aurora.gplayapi.data.models.FileType.BASE
-                }
+                PlayFile(
+                    url = apkUrl,
+                    name = "$packageName.apk",
+                    size = 0, // Unknown size until download starts
+                    type = FileType.BASE
+                )
             ),
             // Mark as external app so we can identify it later
             shortDescription = "External App"
