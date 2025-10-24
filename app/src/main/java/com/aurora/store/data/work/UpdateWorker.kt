@@ -196,7 +196,7 @@ class UpdateWorker @AssistedInject constructor(
 
                 if (externalApp.versionCode > installedJsonVersion) {
                     Log.d(TAG, "External app update available: ${externalApp.displayName} (${installedJsonVersion} -> ${externalApp.versionCode})")
-                    updates.add(externalApp.toApp())
+                    updates.add(externalApp.toApp(context))
                 }
             } catch (e: Exception) {
                 // App not installed, skip

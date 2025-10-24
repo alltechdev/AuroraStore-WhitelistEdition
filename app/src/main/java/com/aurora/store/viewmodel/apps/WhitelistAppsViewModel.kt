@@ -19,6 +19,7 @@
 
 package com.aurora.store.viewmodel.apps
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,6 +29,7 @@ import com.aurora.store.data.helper.DownloadHelper
 import com.aurora.store.data.model.ExternalApp
 import com.aurora.store.data.providers.WhitelistProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +39,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WhitelistAppsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val whitelistProvider: WhitelistProvider,
     private val appDetailsHelper: AppDetailsHelper,
     private val downloadHelper: DownloadHelper
@@ -92,7 +95,7 @@ class WhitelistAppsViewModel @Inject constructor(
                 }
 
                 // Convert external apps to App objects
-                val externalAppsList = externalApps.map { it.toApp() }
+                val externalAppsList = externalApps.map { it.toApp(context) }
 
                 // Combine both lists
                 val allApps = (playStoreApps + externalAppsList)

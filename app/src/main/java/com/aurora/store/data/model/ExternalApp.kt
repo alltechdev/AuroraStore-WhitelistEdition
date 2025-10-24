@@ -19,9 +19,12 @@
 
 package com.aurora.store.data.model
 
+import android.content.Context
 import com.aurora.gplayapi.data.models.App
 import com.aurora.gplayapi.data.models.Artwork
+import com.aurora.gplayapi.data.models.EncodedCertificateSet
 import com.aurora.gplayapi.data.models.PlayFile
+import com.aurora.store.util.CertUtil
 
 /**
  * Represents an external app not available on Google Play Store
@@ -40,7 +43,17 @@ data class ExternalApp(
      * Convert ExternalApp to gplayapi App object for compatibility
      * with existing UI and download infrastructure
      */
-    fun toApp(): App {
+    fun toApp(context: Context): App {
+        // Get actual installed certificate if app is installed
+        val certList = try {
+            CertUtil.getEncodedCertificateHashes(context, packageName).map {
+                EncodedCertificateSet(certificateSet = it, sha256 = String())
+            }.toMutableList()
+        } catch (e: Exception) {
+            // App not installed, use dummy cert that won't match (but won't crash)
+            mutableListOf(EncodedCertificateSet(certificateSet = "external_app", sha256 = String()))
+        }
+
         return App(
             packageName = packageName,
             displayName = displayName,
@@ -58,6 +71,7 @@ data class ExternalApp(
             ),
             isFree = true,
             isInstalled = false,
+            certificateSetList = certList,
             // Mark as external app so we can identify it later
             shortDescription = "External App"
         )
