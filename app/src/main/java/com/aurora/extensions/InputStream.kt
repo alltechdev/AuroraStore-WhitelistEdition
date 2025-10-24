@@ -29,7 +29,8 @@ fun InputStream.copyTo(out: OutputStream, streamSize: Long): Flow<DownloadInfo> 
 
             bytesCopied += bytes
             // Emit stream progress in percentage
-            emit(DownloadInfo((bytesCopied * 100 / streamSize).toInt(), bytes.toLong(), speed))
+            val progress = if (streamSize > 0) (bytesCopied * 100 / streamSize).toInt() else 0
+            emit(DownloadInfo(progress, bytes.toLong(), speed))
             bytes = read(buffer)
         }
         timer.cancel()
