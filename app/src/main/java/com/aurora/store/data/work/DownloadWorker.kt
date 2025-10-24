@@ -443,7 +443,11 @@ class DownloadWorker @AssistedInject constructor(
         val algorithm = if (gFile.sha256.isBlank()) Algorithm.SHA1 else Algorithm.SHA256
         val expectedSha = if (algorithm == Algorithm.SHA1) gFile.sha1 else gFile.sha256
 
-        if (expectedSha.isBlank()) return false
+        // If no hash is provided (e.g., external apps), skip verification
+        if (expectedSha.isBlank()) {
+            Log.w(TAG, "No hash provided for $file, skipping verification (external app?)")
+            return true
+        }
 
         return withContext(Dispatchers.IO) {
             try {
