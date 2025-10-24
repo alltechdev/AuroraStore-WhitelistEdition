@@ -30,6 +30,7 @@ import com.aurora.store.AuroraApp
 import com.aurora.store.MobileNavigationDirections
 import com.aurora.store.R
 import com.aurora.store.data.event.BusEvent
+import com.aurora.store.data.event.InstallerEvent
 import com.aurora.store.data.model.MinimalApp
 import com.aurora.store.data.model.PermissionType
 import com.aurora.store.data.providers.PermissionProvider.Companion.isGranted
@@ -93,7 +94,22 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             AuroraApp.events.busEvent.collect { event ->
                 if (event is BusEvent.WhitelistUpdated) {
+                    binding.swipeRefreshLayout.isRefreshing = true
                     viewModel.fetchWhitelistApps()
+                }
+            }
+        }
+
+        // Listen for installation/uninstallation events and refresh UI
+        viewLifecycleOwner.lifecycleScope.launch {
+            AuroraApp.events.installerEvent.collect { event ->
+                when (event) {
+                    is InstallerEvent.Installed,
+                    is InstallerEvent.Uninstalled -> {
+                        // Trigger UI refresh to update button states
+                        viewModel.fetchWhitelistApps()
+                    }
+                    else -> {} // Ignore other events
                 }
             }
         }
