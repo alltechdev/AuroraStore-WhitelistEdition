@@ -213,6 +213,11 @@ class DownloadWorker @AssistedInject constructor(
     private suspend fun onSuccess(): Result {
         return withContext(NonCancellable) {
             return@withContext try {
+                // Store version for external apps update tracking (Play Store apps ignored in update check)
+                val prefs = context.getSharedPreferences("external_apps", Context.MODE_PRIVATE)
+                prefs.edit().putLong("${download.packageName}_version", download.versionCode).apply()
+                Log.d(TAG, "Stored app version: ${download.packageName} = ${download.versionCode}")
+
                 appInstaller.getPreferredInstaller().install(download)
                 Result.success()
             } catch (exception: Exception) {

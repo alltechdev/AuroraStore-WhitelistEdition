@@ -189,11 +189,13 @@ class UpdateWorker @AssistedInject constructor(
         externalApps.forEach { externalApp ->
             // Check if app is installed
             try {
-                val installedPackage = context.packageManager.getPackageInfo(externalApp.packageName, 0)
-                // Compare version codes
-                val installedVersionCode = PackageInfoCompat.getLongVersionCode(installedPackage)
-                if (externalApp.versionCode > installedVersionCode) {
-                    Log.d(TAG, "External app update available: ${externalApp.displayName} (${installedVersionCode} -> ${externalApp.versionCode})")
+                context.packageManager.getPackageInfo(externalApp.packageName, 0)
+                // App is installed, check if JSON version changed
+                val prefs = context.getSharedPreferences("external_apps", Context.MODE_PRIVATE)
+                val installedJsonVersion = prefs.getLong("${externalApp.packageName}_version", 0L)
+
+                if (externalApp.versionCode > installedJsonVersion) {
+                    Log.d(TAG, "External app update available: ${externalApp.displayName} (${installedJsonVersion} -> ${externalApp.versionCode})")
                     updates.add(externalApp.toApp())
                 }
             } catch (e: Exception) {
