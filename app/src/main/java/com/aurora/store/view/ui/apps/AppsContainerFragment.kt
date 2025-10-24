@@ -80,13 +80,13 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         // Observe whitelist apps combined with download status
         viewLifecycleOwner.lifecycleScope.launch {
             combine(
-                viewModel.apps,
+                viewModel.categorizedApps,
                 viewModel.downloadsList,
                 viewModel.isLoading
-            ) { apps, downloads, loading ->
-                Triple(apps, downloads, loading)
-            }.collect { (apps, downloads, loading) ->
-                updateController(apps, downloads, loading)
+            ) { categorizedApps, downloads, loading ->
+                Triple(categorizedApps, downloads, loading)
+            }.collect { (categorizedApps, downloads, loading) ->
+                updateController(categorizedApps, downloads, loading)
             }
         }
 
@@ -118,7 +118,7 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         viewModel.fetchWhitelistApps()
     }
 
-    private fun updateController(apps: List<App>?, downloads: List<Download>, loading: Boolean) {
+    private fun updateController(categorizedApps: Map<String, List<App>>, downloads: List<Download>, loading: Boolean) {
         // Stop refresh animation when loading is complete
         if (!loading) {
             binding.swipeRefreshLayout.isRefreshing = false
@@ -126,7 +126,7 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
 
         binding.recycler.withModels {
             setFilterDuplicates(true)
-            if (loading || apps == null) {
+            if (loading) {
                 // Show loading shimmer
                 for (i in 1..10) {
                     add(
@@ -134,7 +134,7 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
                             .id(i)
                     )
                 }
-            } else if (apps.isEmpty()) {
+            } else if (categorizedApps.isEmpty()) {
                 // Show empty state
                 add(
                     NoAppViewModel_()
@@ -143,29 +143,41 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
                         .message(R.string.no_apps_available)
                 )
             } else {
-                // Display whitelisted apps with install/uninstall buttons
-                apps.forEach { app ->
-                    val download = downloads.find { it.packageName == app.packageName }
-                    val isInstalled = PackageUtil.isInstalled(requireContext(), app.packageName)
+                // Display apps grouped by category
+                categorizedApps.forEach { (category, apps) ->
+                    // Add category header (only if there are multiple categories)
+                    if (categorizedApps.size > 1) {
+                        add(
+                            com.aurora.store.view.epoxy.views.HeaderViewModel_()
+                                .id("category_$category")
+                                .title(category)
+                        )
+                    }
 
-                    // Convert App to Update for display
-                    val update = Update.fromApp(requireContext(), app)
+                    // Add apps in this category
+                    apps.forEach { app ->
+                        val download = downloads.find { it.packageName == app.packageName }
+                        val isInstalled = PackageUtil.isInstalled(requireContext(), app.packageName)
 
-                    add(
-                        AppUpdateViewModel_()
-                            .id(app.packageName)
-                            .update(update)
-                            .download(download)
-                            .buttonText(if (isInstalled) getString(R.string.action_uninstall) else getString(R.string.action_install))
-                            .positiveAction { _ ->
-                                if (isInstalled) {
-                                    uninstallApp(app)
-                                } else {
-                                    installApp(app)
+                        // Convert App to Update for display
+                        val update = Update.fromApp(requireContext(), app)
+
+                        add(
+                            AppUpdateViewModel_()
+                                .id(app.packageName)
+                                .update(update)
+                                .download(download)
+                                .buttonText(if (isInstalled) getString(R.string.action_uninstall) else getString(R.string.action_install))
+                                .positiveAction { _ ->
+                                    if (isInstalled) {
+                                        uninstallApp(app)
+                                    } else {
+                                        installApp(app)
+                                    }
                                 }
-                            }
-                            .negativeAction { _ -> cancelApp(app) }
-                    )
+                                .negativeAction { _ -> cancelApp(app) }
+                        )
+                    }
                 }
             }
         }

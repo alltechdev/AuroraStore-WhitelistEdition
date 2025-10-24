@@ -83,8 +83,50 @@ class WhitelistProvider @Inject constructor(
             }
         }
 
+    /**
+     * Extract package name from whitelist entry
+     * Format: "com.package.name" or "com.package.name CategoryName"
+     */
+    private fun extractPackageName(entry: String): String {
+        return entry.substringBefore(" ")
+    }
+
+    /**
+     * Extract category from whitelist entry (if present)
+     * Format: "com.package.name CategoryName"
+     * Returns null if no category specified
+     */
+    fun extractCategory(entry: String): String? {
+        val parts = entry.split(" ", limit = 2)
+        return if (parts.size > 1) parts[1] else null
+    }
+
+    /**
+     * Get whitelist entries grouped by category
+     * Returns a map of category name to list of package names
+     * Uncategorized apps are in the "Other" category
+     */
+    fun getWhitelistByCategory(): Map<String, List<String>> {
+        val categorized = mutableMapOf<String, MutableList<String>>()
+
+        whitelist.forEach { entry ->
+            val packageName = extractPackageName(entry)
+            val category = extractCategory(entry) ?: "Other"
+            categorized.getOrPut(category) { mutableListOf() }.add(packageName)
+        }
+
+        return categorized
+    }
+
+    /**
+     * Get all package names from whitelist (ignoring categories)
+     */
+    fun getPackageNames(): Set<String> {
+        return whitelist.map { extractPackageName(it) }.toSet()
+    }
+
     fun isWhitelisted(packageName: String): Boolean {
-        return whitelist.contains(packageName)
+        return getPackageNames().contains(packageName)
     }
 
 

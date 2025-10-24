@@ -46,6 +46,9 @@ class WhitelistAppsViewModel @Inject constructor(
     private val _apps = MutableStateFlow<List<App>>(emptyList())
     val apps: StateFlow<List<App>> = _apps.asStateFlow()
 
+    private val _categorizedApps = MutableStateFlow<Map<String, List<App>>>(emptyMap())
+    val categorizedApps: StateFlow<Map<String, List<App>>> = _categorizedApps.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -68,13 +71,14 @@ class WhitelistAppsViewModel @Inject constructor(
             try {
                 _isLoading.value = true
 
-                // Get whitelist package names
-                val whitelistPackages = whitelistProvider.whitelist.toList()
+                // Get whitelist package names (ignore categories for fetching)
+                val whitelistPackages = whitelistProvider.getPackageNames().toList()
 
                 Log.d(TAG, "Fetching details for ${whitelistPackages.size} whitelisted apps")
 
                 if (whitelistPackages.isEmpty()) {
                     _apps.value = emptyList()
+                    _categorizedApps.value = emptyMap()
                     _isLoading.value = false
                     return@launch
                 }
@@ -86,11 +90,32 @@ class WhitelistAppsViewModel @Inject constructor(
 
                 Log.d(TAG, "Successfully fetched ${apps.size} whitelisted apps")
 
+                // Group apps by category
+                val categoryMap = whitelistProvider.getWhitelistByCategory()
+                val categorized = mutableMapOf<String, MutableList<App>>()
+
+                apps.forEach { app ->
+                    // Find which category this package belongs to
+                    val category = categoryMap.entries.firstOrNull { entry ->
+                        entry.value.contains(app.packageName)
+                    }?.key ?: "Other"
+
+                    categorized.getOrPut(category) { mutableListOf() }.add(app)
+                }
+
+                // Sort categories: put "Other" last, alphabetize rest
+                val sortedCategories = categorized.entries
+                    .sortedWith(compareBy<Map.Entry<String, List<App>>> { it.key == "Other" }
+                        .thenBy { it.key })
+                    .associate { it.key to it.value }
+
                 _apps.value = apps
+                _categorizedApps.value = sortedCategories
                 _isLoading.value = false
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to fetch whitelisted apps", e)
                 _apps.value = emptyList()
+                _categorizedApps.value = emptyMap()
                 _isLoading.value = false
             }
         }

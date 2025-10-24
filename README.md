@@ -110,8 +110,9 @@ var remoteWhitelistUrl: String
 
 ### Whitelist JSON Format
 
-Your whitelist JSON must be an array of Android package names:
+Your whitelist JSON must be an array of package names with optional categories:
 
+#### Simple Format (No Categories)
 ```json
 [
   "com.package.name1",
@@ -119,6 +120,23 @@ Your whitelist JSON must be an array of Android package names:
   "com.another.package"
 ]
 ```
+
+#### With Categories (Apps Tab Only)
+```json
+[
+  "com.package.name1 Productivity",
+  "com.package.name2 Games",
+  "com.another.package Social",
+  "com.nocategory.app"
+]
+```
+
+**Category Format:** `"package.name CategoryName"`
+- Everything after the first space is the category name
+- Apps without a space are placed in "Other" category
+- Categories only appear in the Apps tab
+- Updates tab ignores categories completely
+- Categories are sorted alphabetically, with "Other" last
 
 ## How Auto-Updates Work
 
