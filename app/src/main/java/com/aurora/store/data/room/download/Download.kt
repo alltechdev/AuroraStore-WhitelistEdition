@@ -42,6 +42,8 @@ data class Download(
 
     companion object {
         fun fromApp(app: App): Download {
+            val filteredFiles = app.fileList.filterNot { it.url.isBlank() }
+
             return Download(
                 app.packageName,
                 app.versionCode,
@@ -57,7 +59,7 @@ data class Download(
                 0L,
                 0,
                 0,
-                app.fileList.filterNot { it.url.isBlank() },
+                filteredFiles,
                 app.dependencies.dependentLibraries.map { SharedLib.fromApp(it) },
                 app.targetSdk,
                 Date().time

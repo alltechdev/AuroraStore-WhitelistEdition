@@ -56,6 +56,8 @@ data class ExternalApp(
                     size = 0 // Unknown size until download starts
                 )
             ),
+            isFree = true,
+            isInstalled = false,
             // Mark as external app so we can identify it later
             shortDescription = "External App"
         )
