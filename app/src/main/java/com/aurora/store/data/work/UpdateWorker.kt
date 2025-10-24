@@ -159,16 +159,46 @@ class UpdateWorker @AssistedInject constructor(
                 packages.filterNot { if (isFDroidFilterEnabled) CertUtil.isFDroidApp(context, it.packageName) else false }
             }
 
-            val updates = appDetailsHelper.getAppByPackageName(filteredPackages.map { it.packageName })
+            // Check Play Store updates
+            val playStoreUpdates = appDetailsHelper.getAppByPackageName(filteredPackages.map { it.packageName })
                 .filter { it.displayName.isNotEmpty() }
                 .filter { PackageUtil.isUpdatable(context, it.packageName, it.versionCode.toLong()) }
                 .toMutableList()
 
-            if (canSelfUpdate) getSelfUpdate()?.let { updates.add(it) }
+            // Check external app updates
+            val externalUpdates = checkExternalAppUpdates()
 
-            return@withContext updates.map { Update.fromApp(context, it) }
+            // Combine updates
+            val allUpdates = (playStoreUpdates + externalUpdates).toMutableList()
+
+            if (canSelfUpdate) getSelfUpdate()?.let { allUpdates.add(it) }
+
+            return@withContext allUpdates.map { Update.fromApp(context, it) }
                 .sortedBy { it.displayName.lowercase(Locale.getDefault()) }
         }
+    }
+
+    /**
+     * Check for updates for external apps (non-Play Store)
+     */
+    private fun checkExternalAppUpdates(): List<App> {
+        val externalApps = whitelistProvider.getExternalApps()
+        val updates = mutableListOf<App>()
+
+        externalApps.forEach { externalApp ->
+            // Check if app is installed
+            val installedPackage = PackageUtil.getPackageInfo(context, externalApp.packageName)
+            if (installedPackage != null) {
+                // Compare version codes
+                val installedVersionCode = PackageUtil.getVersionCode(installedPackage)
+                if (externalApp.versionCode > installedVersionCode) {
+                    Log.d(TAG, "External app update available: ${externalApp.displayName} (${installedVersionCode} -> ${externalApp.versionCode})")
+                    updates.add(externalApp.toApp())
+                }
+            }
+        }
+
+        return updates
     }
 
     /**

@@ -25,6 +25,7 @@ import androidx.lifecycle.viewModelScope
 import com.aurora.gplayapi.data.models.App
 import com.aurora.gplayapi.helpers.AppDetailsHelper
 import com.aurora.store.data.helper.DownloadHelper
+import com.aurora.store.data.model.ExternalApp
 import com.aurora.store.data.providers.WhitelistProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -71,30 +72,39 @@ class WhitelistAppsViewModel @Inject constructor(
             try {
                 _isLoading.value = true
 
-                // Get whitelist package names (ignore categories for fetching)
-                val whitelistPackages = whitelistProvider.getPackageNames().toList()
+                // Get external apps first
+                val externalApps = whitelistProvider.getExternalApps()
+                Log.d(TAG, "Found ${externalApps.size} external apps")
 
-                Log.d(TAG, "Fetching details for ${whitelistPackages.size} whitelisted apps")
+                // Get Play Store package names (exclude external apps)
+                val playStorePackages = whitelistProvider.getPackageNames()
+                    .filter { pkg -> externalApps.none { it.packageName == pkg } }
+                    .toList()
 
-                if (whitelistPackages.isEmpty()) {
-                    _apps.value = emptyList()
-                    _categorizedApps.value = emptyMap()
-                    _isLoading.value = false
-                    return@launch
-                }
+                Log.d(TAG, "Fetching details for ${playStorePackages.size} Play Store apps")
 
                 // Fetch app details from Play Store for whitelisted packages
-                val apps = appDetailsHelper.getAppByPackageName(whitelistPackages)
-                    .filter { it.displayName.isNotEmpty() }
+                val playStoreApps = if (playStorePackages.isNotEmpty()) {
+                    appDetailsHelper.getAppByPackageName(playStorePackages)
+                        .filter { it.displayName.isNotEmpty() }
+                } else {
+                    emptyList()
+                }
+
+                // Convert external apps to App objects
+                val externalAppsList = externalApps.map { it.toApp() }
+
+                // Combine both lists
+                val allApps = (playStoreApps + externalAppsList)
                     .sortedBy { it.displayName.lowercase() }
 
-                Log.d(TAG, "Successfully fetched ${apps.size} whitelisted apps")
+                Log.d(TAG, "Successfully fetched ${allApps.size} total apps (${playStoreApps.size} Play Store, ${externalAppsList.size} external)")
 
                 // Group apps by category
                 val categoryMap = whitelistProvider.getWhitelistByCategory()
                 val categorized = mutableMapOf<String, MutableList<App>>()
 
-                apps.forEach { app ->
+                allApps.forEach { app ->
                     // Find which category this package belongs to
                     val category = categoryMap.entries.firstOrNull { entry ->
                         entry.value.contains(app.packageName)
@@ -109,7 +119,7 @@ class WhitelistAppsViewModel @Inject constructor(
                         .thenBy { it.key })
                     .associate { it.key to it.value }
 
-                _apps.value = apps
+                _apps.value = allApps
                 _categorizedApps.value = sortedCategories
                 _isLoading.value = false
             } catch (e: Exception) {

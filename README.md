@@ -138,6 +138,30 @@ Your whitelist JSON must be an array of package names with optional categories:
 - Updates tab ignores categories completely
 - Categories are sorted alphabetically, with "Other" last
 
+#### With External Apps (feature/external-apps branch)
+```json
+[
+  "com.playstore.app Games",
+  "Uber|com.uber.app|1.2.3|https://example.com/uber.apk|https://example.com/icon.png|Transport",
+  "Signal|org.thoughtcrime.securesms|5.4.3|https://signal.org/app.apk|https://signal.org/icon.png|Social"
+]
+```
+
+**External App Format:** `"AppName|packageName|version|apkUrl|iconUrl|category"`
+- AppName: Display name (e.g., "Uber")
+- packageName: Android package identifier
+- version: Version string (e.g., "1.2.3") for update detection
+- apkUrl: Direct download URL for APK file
+- iconUrl: Direct URL to app icon (optional, leave empty for no icon)
+- category: Category name (optional)
+
+**External App Features:**
+- Download APKs from any URL (not just Play Store)
+- Version checking: compares installed version vs JSON version
+- Shows in Apps tab with custom name and icon
+- Shows in Updates tab when newer version available
+- Installation works same as Play Store apps
+
 ## How Auto-Updates Work
 
 1. **App starts** → Immediate whitelist fetch from configured URL

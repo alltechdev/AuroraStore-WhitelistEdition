@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.aurora.extensions.isNAndAbove
+import com.aurora.store.data.model.ExternalApp
 import com.aurora.store.util.Preferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.Json
@@ -85,20 +86,53 @@ class WhitelistProvider @Inject constructor(
 
     /**
      * Extract package name from whitelist entry
-     * Format: "com.package.name" or "com.package.name CategoryName"
+     * Formats:
+     * - "com.package.name"
+     * - "com.package.name CategoryName"
+     * - "AppName|com.package.name|version|url|icon|category"
      */
     private fun extractPackageName(entry: String): String {
-        return entry.substringBefore(" ")
+        return if (ExternalApp.isExternalApp(entry)) {
+            // External app format: extract package name from second field
+            entry.split("|").getOrNull(1)?.trim() ?: ""
+        } else {
+            // Standard format: package name before space
+            entry.substringBefore(" ")
+        }
     }
 
     /**
      * Extract category from whitelist entry (if present)
-     * Format: "com.package.name CategoryName"
+     * Formats:
+     * - "com.package.name CategoryName"
+     * - "AppName|com.package.name|version|url|icon|category"
      * Returns null if no category specified
      */
     fun extractCategory(entry: String): String? {
-        val parts = entry.split(" ", limit = 2)
-        return if (parts.size > 1) parts[1] else null
+        return if (ExternalApp.isExternalApp(entry)) {
+            // External app format: category is 6th field
+            entry.split("|").getOrNull(5)?.trim()?.takeIf { it.isNotEmpty() }
+        } else {
+            // Standard format: category after space
+            val parts = entry.split(" ", limit = 2)
+            if (parts.size > 1) parts[1] else null
+        }
+    }
+
+    /**
+     * Get all external apps from whitelist
+     */
+    fun getExternalApps(): List<ExternalApp> {
+        return whitelist
+            .filter { ExternalApp.isExternalApp(it) }
+            .mapNotNull { ExternalApp.fromWhitelistEntry(it) }
+    }
+
+    /**
+     * Get external app by package name
+     */
+    fun getExternalApp(packageName: String): ExternalApp? {
+        return getExternalApps().firstOrNull { it.packageName == packageName }
     }
 
     /**
