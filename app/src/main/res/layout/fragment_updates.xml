@@ -29,14 +29,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="?attr/actionBarSize"
-        app:menu="@menu/menu_main"
         app:title="@string/title_updates" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/search_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar"
+        android:padding="8dp"
+        android:visibility="gone"
+        app:boxBackgroundMode="outline">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/search_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/action_search"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/toolbar">
+        android:layout_below="@id/search_container">
 
         <com.airbnb.epoxy.EpoxyRecyclerView
             android:id="@+id/recycler"

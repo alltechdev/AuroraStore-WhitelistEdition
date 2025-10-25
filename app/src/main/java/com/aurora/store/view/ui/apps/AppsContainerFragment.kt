@@ -66,17 +66,36 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         // Toolbar
         binding.toolbar.apply {
             title = getString(R.string.title_apps)
+            inflateMenu(R.menu.menu_main)
             setOnMenuItemClickListener {
                 when (it.itemId) {
+                    R.id.menu_search -> {
+                        toggleSearch()
+                        true
+                    }
                     R.id.menu_more -> {
                         findNavController().navigate(
                             MobileNavigationDirections.actionGlobalMoreDialogFragment()
                         )
+                        true
                     }
+                    else -> false
                 }
-                true
             }
         }
+
+        // Search input listener
+        binding.searchInput.setOnEditorActionListener { _, _, _ ->
+            viewModel.setSearchQuery(binding.searchInput.text.toString())
+            true
+        }
+        binding.searchInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.setSearchQuery(s.toString())
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
 
         // Observe whitelist apps combined with download status
         viewLifecycleOwner.lifecycleScope.launch {
@@ -226,6 +245,22 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
             process.waitFor() == 0
         } catch (e: Exception) {
             false
+        }
+    }
+
+    private fun toggleSearch() {
+        if (binding.searchContainer.visibility == View.VISIBLE) {
+            // Hide search
+            binding.searchContainer.visibility = View.GONE
+            binding.searchInput.text?.clear()
+            viewModel.setSearchQuery("")
+        } else {
+            // Show search
+            binding.searchContainer.visibility = View.VISIBLE
+            binding.searchInput.requestFocus()
+            // Show keyboard
+            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(binding.searchInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
         }
     }
 

@@ -50,8 +50,11 @@ class WhitelistAppsViewModel @Inject constructor(
     private val _apps = MutableStateFlow<List<App>>(emptyList())
     val apps: StateFlow<List<App>> = _apps.asStateFlow()
 
+    private val _unfilteredCategorizedApps = MutableStateFlow<Map<String, List<App>>>(emptyMap())
     private val _categorizedApps = MutableStateFlow<Map<String, List<App>>>(emptyMap())
     val categorizedApps: StateFlow<Map<String, List<App>>> = _categorizedApps.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -67,6 +70,25 @@ class WhitelistAppsViewModel @Inject constructor(
     fun cancelDownload(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             downloadHelper.cancelDownload(packageName)
+        }
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+        filterApps(query)
+    }
+
+    private fun filterApps(query: String) {
+        if (query.isBlank()) {
+            _categorizedApps.value = _unfilteredCategorizedApps.value
+        } else {
+            val filtered = _unfilteredCategorizedApps.value.mapValues { (_, apps) ->
+                apps.filter {
+                    it.displayName.contains(query, ignoreCase = true) ||
+                    it.packageName.contains(query, ignoreCase = true)
+                }
+            }.filterValues { it.isNotEmpty() }
+            _categorizedApps.value = filtered
         }
     }
 
@@ -123,11 +145,14 @@ class WhitelistAppsViewModel @Inject constructor(
                     .associate { it.key to it.value }
 
                 _apps.value = allApps
-                _categorizedApps.value = sortedCategories
+                _unfilteredCategorizedApps.value = sortedCategories
+                // Apply current search filter
+                filterApps(_searchQuery.value)
                 _isLoading.value = false
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to fetch whitelisted apps", e)
                 _apps.value = emptyList()
+                _unfilteredCategorizedApps.value = emptyMap()
                 _categorizedApps.value = emptyMap()
                 _isLoading.value = false
             }

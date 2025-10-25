@@ -60,16 +60,19 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
 
 
         // Toolbar
-        binding.toolbar.setOnMenuItemClickListener {
-            when (it.itemId) {
-
-                R.id.menu_more -> {
-                    findNavController().navigate(
-                        MobileNavigationDirections.actionGlobalMoreDialogFragment()
-                    )
+        binding.toolbar.apply {
+            inflateMenu(R.menu.menu_updates)
+            setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.menu_more -> {
+                        findNavController().navigate(
+                            MobileNavigationDirections.actionGlobalMoreDialogFragment()
+                        )
+                        true
+                    }
+                    else -> false
                 }
             }
-            true
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
