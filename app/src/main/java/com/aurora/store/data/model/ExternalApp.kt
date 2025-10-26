@@ -43,7 +43,7 @@ data class ExternalApp(
      * Convert ExternalApp to gplayapi App object for compatibility
      * with existing UI and download infrastructure
      */
-    fun toApp(context: Context): App {
+    fun toApp(context: Context, appDetailsHelper: com.aurora.gplayapi.helpers.AppDetailsHelper? = null): App {
         // Get actual installed certificate if app is installed
         val certList = try {
             CertUtil.getEncodedCertificateHashes(context, packageName).map {
@@ -54,14 +54,27 @@ data class ExternalApp(
             mutableListOf(EncodedCertificateSet(certificateSet = "external_app", sha256 = String()))
         }
 
+        // Get icon artwork: use provided icon URL, or fallback to Play Store, or empty
+        val iconArtwork = iconUrl?.let {
+            Artwork(url = it)
+        } ?: run {
+            try {
+                // Try to get icon from Play Store
+                appDetailsHelper?.getAppByPackageName(listOf(packageName))
+                    ?.find { it.packageName == packageName }
+                    ?.iconArtwork
+                    ?: Artwork() // Fallback to empty if Play Store lookup fails
+            } catch (e: Exception) {
+                Artwork() // Fallback to empty if any error occurs
+            }
+        }
+
         return App(
             packageName = packageName,
             displayName = displayName,
             versionName = versionName,
             versionCode = versionCode,
-            iconArtwork = iconUrl?.let {
-                Artwork(url = it)
-            } ?: Artwork(),
+            iconArtwork = iconArtwork,
             fileList = listOf(
                 PlayFile(
                     url = apkUrl,
