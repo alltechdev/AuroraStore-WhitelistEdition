@@ -59,26 +59,16 @@ data class ExternalApp(
             mutableListOf(EncodedCertificateSet(certificateSet = "external_app", sha256 = String()))
         }
 
-        // Get icon artwork: use provided icon URL, or fallback to Play Store, or empty
+        // Get icon artwork: use provided icon URL, or fetch from Play Store
         val iconArtwork = iconUrl?.let {
             Log.d(ExternalApp::class.java.simpleName, "Using provided icon URL: $it")
             Artwork(url = it)
         } ?: run {
             try {
-                // Try to get icon from Play Store
-                Log.d(ExternalApp::class.java.simpleName, "No icon URL provided, fetching from Play Store for $packageName")
-                Log.d(ExternalApp::class.java.simpleName, "appDetailsHelper is null: ${appDetailsHelper == null}")
-
-                val playStoreApp = try {
-                    appDetailsHelper?.getAppByPackageName(packageName)
-                } catch (e: Exception) {
-                    Log.d(ExternalApp::class.java.simpleName, "Single package lookup failed, trying list approach: ${e.message}")
-                    appDetailsHelper?.getAppByPackageName(listOf(packageName))
-                        ?.find { it.packageName == packageName }
-                }
-
+                // Try to get icon from Play Store (works even if app not installed)
+                Log.d(ExternalApp::class.java.simpleName, "No icon URL for $packageName, fetching from Play Store")
+                val playStoreApp = appDetailsHelper?.getAppByPackageName(packageName)
                 Log.d(ExternalApp::class.java.simpleName, "Play Store app found: ${playStoreApp != null}")
-
                 playStoreApp?.iconArtwork
                     ?: Artwork() // Fallback to empty if Play Store lookup fails
             } catch (e: Exception) {
