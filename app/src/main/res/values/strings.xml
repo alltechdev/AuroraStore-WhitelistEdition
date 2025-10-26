@@ -238,6 +238,10 @@
     <string name="session_login">@ars18-JTechForums</string>
     <string name="session_login_failed_google">Could not log in via Google</string>
     <string name="session_scrapped">Last session scrapped</string>
+    <string name="external_apps_only_mode">External apps only - no login required</string>
+    <string name="auth_required_for_play_store_apps">Login recommended for better app icon support and to access Play Store apps in the whitelist.</string>
+    <string name="auth_optional_external_only">Login is optional but recommended for better app icons. You can browse external apps without logging in.</string>
+    <string name="action_login">Log in</string>
     <string name="session_verifying">Verifying session</string>
     <string name="session_verifying_google">Verifying Google session</string>
     <string name="spoof_apply">"Make sure you re-login to apply the spoof"</string>

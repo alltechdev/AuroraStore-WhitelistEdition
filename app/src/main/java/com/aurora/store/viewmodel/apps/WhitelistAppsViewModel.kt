@@ -27,6 +27,7 @@ import com.aurora.gplayapi.data.models.App
 import com.aurora.gplayapi.helpers.AppDetailsHelper
 import com.aurora.store.data.helper.DownloadHelper
 import com.aurora.store.data.model.ExternalApp
+import com.aurora.store.data.providers.AccountProvider
 import com.aurora.store.data.providers.WhitelistProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -58,6 +59,9 @@ class WhitelistAppsViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _requiresAuth = MutableStateFlow(false)
+    val requiresAuth: StateFlow<Boolean> = _requiresAuth.asStateFlow()
 
     val downloadsList = downloadHelper.downloadsList
 
@@ -101,6 +105,10 @@ class WhitelistAppsViewModel @Inject constructor(
                     _isLoading.value = true
                 }
 
+                // Check if user is logged in
+                val isLoggedIn = AccountProvider.isLoggedIn(context)
+                Log.d(TAG, "User logged in: $isLoggedIn")
+
                 // Get external apps first
                 val externalApps = whitelistProvider.getExternalApps()
                 Log.d(TAG, "Found ${externalApps.size} external apps")
@@ -110,7 +118,42 @@ class WhitelistAppsViewModel @Inject constructor(
                     .filter { pkg -> externalApps.none { it.packageName == pkg } }
                     .toList()
 
-                Log.d(TAG, "Fetching details for ${playStorePackages.size} Play Store apps")
+                Log.d(TAG, "Found ${playStorePackages.size} Play Store apps in whitelist")
+
+                // Check if we need auth for Play Store apps but don't have it
+                if (playStorePackages.isNotEmpty() && !isLoggedIn) {
+                    Log.w(TAG, "Play Store apps exist but user not logged in - auth required")
+                    _requiresAuth.value = true
+
+                    // Show only external apps (no Play Store fallback without auth)
+                    val externalAppsList = externalApps.map { it.toApp(context, null) }
+                    val categoryMap = whitelistProvider.getWhitelistByCategory()
+                    val categorized = mutableMapOf<String, MutableList<App>>()
+
+                    externalAppsList.forEach { app ->
+                        val category = categoryMap.entries.firstOrNull { entry ->
+                            entry.value.contains(app.packageName)
+                        }?.key ?: "Other"
+                        categorized.getOrPut(category) { mutableListOf() }.add(app)
+                    }
+
+                    val sortedCategories = categorized.entries
+                        .sortedWith(compareBy<Map.Entry<String, List<App>>> { it.key == "Other" }
+                            .thenBy { it.key })
+                        .associate { it.key to it.value }
+
+                    _apps.value = externalAppsList
+                    _unfilteredCategorizedApps.value = sortedCategories
+                    filterApps(_searchQuery.value)
+
+                    if (shouldShowLoading) {
+                        _isLoading.value = false
+                    }
+                    return@launch
+                }
+
+                // Reset auth required flag if we have auth or no Play Store apps
+                _requiresAuth.value = false
 
                 // Fetch app details from Play Store for whitelisted packages
                 val playStoreApps = if (playStorePackages.isNotEmpty()) {
@@ -121,7 +164,11 @@ class WhitelistAppsViewModel @Inject constructor(
                 }
 
                 // Convert external apps to App objects
-                val externalAppsList = externalApps.map { it.toApp(context, appDetailsHelper) }
+                // Use Play Store fallback for icons if user is logged in (has valid auth)
+                // The toApp method will handle failures gracefully if session is invalid
+                val externalAppsList = externalApps.map {
+                    it.toApp(context, if (isLoggedIn) appDetailsHelper else null)
+                }
 
                 // Combine both lists
                 val allApps = (playStoreApps + externalAppsList)

@@ -59,21 +59,27 @@ data class ExternalApp(
             mutableListOf(EncodedCertificateSet(certificateSet = "external_app", sha256 = String()))
         }
 
-        // Get icon artwork: use provided icon URL, or fetch from Play Store
+        // Get icon artwork: use provided icon URL, or fetch from Play Store (only if auth available)
         val iconArtwork = iconUrl?.let {
             Log.d(ExternalApp::class.java.simpleName, "Using provided icon URL: $it")
             Artwork(url = it)
         } ?: run {
-            try {
-                // Try to get icon from Play Store (works even if app not installed)
-                Log.d(ExternalApp::class.java.simpleName, "No icon URL for $packageName, fetching from Play Store")
-                val playStoreApp = appDetailsHelper?.getAppByPackageName(packageName)
-                Log.d(ExternalApp::class.java.simpleName, "Play Store app found: ${playStoreApp != null}")
-                playStoreApp?.iconArtwork
-                    ?: Artwork() // Fallback to empty if Play Store lookup fails
-            } catch (e: Exception) {
-                Log.e(ExternalApp::class.java.simpleName, "Error fetching Play Store icon for $packageName", e)
-                Artwork() // Fallback to empty if any error occurs
+            // Only try Play Store fallback if appDetailsHelper is provided (meaning auth is available)
+            if (appDetailsHelper != null) {
+                try {
+                    // Try to get icon from Play Store (works even if app not installed)
+                    Log.d(ExternalApp::class.java.simpleName, "No icon URL for $packageName, fetching from Play Store")
+                    val playStoreApp = appDetailsHelper.getAppByPackageName(packageName)
+                    Log.d(ExternalApp::class.java.simpleName, "Play Store app found: ${playStoreApp != null}")
+                    playStoreApp?.iconArtwork
+                        ?: Artwork() // Fallback to empty if Play Store lookup fails
+                } catch (e: Exception) {
+                    Log.e(ExternalApp::class.java.simpleName, "Error fetching Play Store icon for $packageName", e)
+                    Artwork() // Fallback to empty if any error occurs
+                }
+            } else {
+                Log.d(ExternalApp::class.java.simpleName, "No icon URL and no auth available for $packageName, using default icon")
+                Artwork() // No auth available, use default icon
             }
         }
 

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "d5da6e54113409ba811bafebc85632e6",
+    "identityHash": "37bc00b12297d60b9167d050698734da",
     "entities": [
       {
         "tableName": "download",
@@ -127,50 +127,6 @@
         "foreignKeys": []
       },
       {
-        "tableName": "favourite",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `iconURL` TEXT NOT NULL, `added` INTEGER NOT NULL, `mode` TEXT NOT NULL, PRIMARY KEY(`packageName`))",
-        "fields": [
-          {
-            "fieldPath": "packageName",
-            "columnName": "packageName",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "displayName",
-            "columnName": "displayName",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "iconURL",
-            "columnName": "iconURL",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "added",
-            "columnName": "added",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "mode",
-            "columnName": "mode",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "packageName"
-          ]
-        },
-        "indices": [],
-        "foreignKeys": []
-      },
-      {
         "tableName": "update",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`packageName` TEXT NOT NULL, `versionCode` INTEGER NOT NULL, `versionName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `iconURL` TEXT NOT NULL, `changelog` TEXT NOT NULL, `id` INTEGER NOT NULL, `developerName` TEXT NOT NULL, `size` INTEGER NOT NULL, `updatedOn` TEXT NOT NULL, `hasValidCert` INTEGER NOT NULL, `offerType` INTEGER NOT NULL, `fileList` TEXT NOT NULL, `sharedLibs` TEXT NOT NULL, `targetSdk` INTEGER NOT NULL, PRIMARY KEY(`packageName`))",
         "fields": [
@@ -278,7 +234,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd5da6e54113409ba811bafebc85632e6')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '37bc00b12297d60b9167d050698734da')"
     ]
   }
 }

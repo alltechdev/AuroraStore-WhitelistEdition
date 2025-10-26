@@ -175,4 +175,19 @@ class WhitelistProvider @Inject constructor(
             remove(packageName)
         }
     }
+
+    /**
+     * Check if whitelist contains only external apps (no Play Store apps)
+     * Returns true if all apps are external format, false if any require Play Store auth
+     */
+    fun hasOnlyExternalApps(): Boolean {
+        val allEntries = whitelist
+        if (allEntries.isEmpty()) {
+            // Empty whitelist = no apps = skip login
+            return true
+        }
+
+        // Check if ALL entries are external apps
+        return allEntries.all { ExternalApp.isExternalApp(it) }
+    }
 }

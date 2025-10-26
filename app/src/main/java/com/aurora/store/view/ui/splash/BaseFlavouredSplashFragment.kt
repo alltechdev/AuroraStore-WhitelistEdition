@@ -25,14 +25,22 @@ import com.aurora.store.view.ui.commons.BaseFragment
 import com.aurora.store.view.ui.sheets.PasscodeDialogSheet
 import com.aurora.store.viewmodel.auth.AuthViewModel
 import com.aurora.store.util.PasscodeUtil
+import com.aurora.store.data.providers.WhitelistProvider
+import com.jakewharton.processphoenix.ProcessPhoenix
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>() {
 
     private val TAG = BaseFlavouredSplashFragment::class.java.simpleName
 
     val viewModel: AuthViewModel by activityViewModels()
+
+    @Inject
+    lateinit var whitelistProvider: WhitelistProvider
 
     val canLoginWithMicroG: Boolean
         get() = PackageUtil.hasSupportedMicroGVariant(requireContext()) &&
@@ -55,6 +63,15 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
             findNavController().navigate(
                 SplashFragmentDirections.actionSplashFragmentToOnboardingFragment()
             )
+            return
+        }
+
+        // Check if whitelist contains only external apps (no Play Store apps)
+        // If true, navigate directly without authentication
+        if (whitelistProvider.hasOnlyExternalApps()) {
+            Log.d(TAG, "Only external apps detected, skipping authentication")
+            updateStatus(getString(R.string.external_apps_only_mode))
+            navigateToDefaultTab()
             return
         }
 
@@ -153,6 +170,18 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
     private fun navigateToDefaultTab() {
         val defaultDestination =
             Preferences.getInteger(requireContext(), PREFERENCE_DEFAULT_SELECTED_TAB)
+
+        // Check if we have a specific destination (e.g., from login prompt)
+        val hasDestinationId = requireArguments().containsKey("destinationId")
+
+        // If coming from login prompt (has destinationId), restart app to ensure fresh state
+        if (hasDestinationId) {
+            Log.d(TAG, "Returning from login prompt, restarting app for fresh state")
+            requireArguments().remove("destinationId")
+            ProcessPhoenix.triggerRebirth(requireContext())
+            return
+        }
+
         val directions =
             when (requireArguments().getInt("destinationId", defaultDestination)) {
                 R.id.updatesFragment -> {

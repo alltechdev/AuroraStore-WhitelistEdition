@@ -114,6 +114,12 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
         viewModel.fetchUpdates()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh when fragment becomes visible to catch any updates that happened while away
+        viewModel.fetchUpdates()
+    }
+
     private fun updateController(appList: Map<Update, Download?>?) {
         binding.recycler.withModels {
             setFilterDuplicates(true)

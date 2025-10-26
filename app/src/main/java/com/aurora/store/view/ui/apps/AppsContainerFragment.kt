@@ -54,6 +54,15 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
 
     private val viewModel: WhitelistAppsViewModel by viewModels()
 
+    private var isFirstResume = true
+
+    private data class AppsState(
+        val categorizedApps: Map<String, List<App>>,
+        val downloads: List<Download>,
+        val loading: Boolean,
+        val requiresAuth: Boolean
+    )
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -97,16 +106,17 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
             override fun afterTextChanged(s: android.text.Editable?) {}
         })
 
-        // Observe whitelist apps combined with download status
+        // Observe whitelist apps combined with download status and auth requirement
         viewLifecycleOwner.lifecycleScope.launch {
             combine(
                 viewModel.categorizedApps,
                 viewModel.downloadsList,
-                viewModel.isLoading
-            ) { categorizedApps, downloads, loading ->
-                Triple(categorizedApps, downloads, loading)
-            }.collect { (categorizedApps, downloads, loading) ->
-                updateController(categorizedApps, downloads, loading)
+                viewModel.isLoading,
+                viewModel.requiresAuth
+            ) { categorizedApps, downloads, loading, requiresAuth ->
+                AppsState(categorizedApps, downloads, loading, requiresAuth)
+            }.collect { state ->
+                updateController(state.categorizedApps, state.downloads, state.loading, state.requiresAuth)
             }
         }
 
@@ -114,8 +124,8 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             AuroraApp.events.busEvent.collect { event ->
                 if (event is BusEvent.WhitelistUpdated) {
-                    binding.swipeRefreshLayout.isRefreshing = true
-                    viewModel.fetchWhitelistApps()
+                    Log.d("AppsContainerFragment", "Whitelist updated, refreshing apps")
+                    viewModel.fetchWhitelistApps(forceLoading = false)
                 }
             }
         }
@@ -124,10 +134,29 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             AuroraApp.events.installerEvent.collect { event ->
                 when (event) {
-                    is InstallerEvent.Installed,
+                    is InstallerEvent.Installed -> {
+                        Log.d("AppsContainerFragment", "=== App installed: ${event.packageName} ===")
+                        // Longer delay to ensure PackageManager has fully updated
+                        kotlinx.coroutines.delay(1000)
+                        Log.d("AppsContainerFragment", "Delay complete, refreshing apps list")
+                        // Refresh without loading spinner - just update button states
+                        viewModel.fetchWhitelistApps(forceLoading = false)
+                        // Force Epoxy to rebuild models after a short delay
+                        kotlinx.coroutines.delay(100)
+                        binding.recycler.requestModelBuild()
+                        Log.d("AppsContainerFragment", "Forced model rebuild")
+                    }
                     is InstallerEvent.Uninstalled -> {
-                        // Trigger UI refresh to update button states
-                        viewModel.fetchWhitelistApps()
+                        Log.d("AppsContainerFragment", "=== App uninstalled: ${event.packageName} ===")
+                        // Longer delay to ensure PackageManager has fully updated
+                        kotlinx.coroutines.delay(1000)
+                        Log.d("AppsContainerFragment", "Delay complete, refreshing apps list")
+                        // Refresh without loading spinner - just update button states
+                        viewModel.fetchWhitelistApps(forceLoading = false)
+                        // Force Epoxy to rebuild models after a short delay
+                        kotlinx.coroutines.delay(100)
+                        binding.recycler.requestModelBuild()
+                        Log.d("AppsContainerFragment", "Forced model rebuild")
                     }
                     else -> {} // Ignore other events
                 }
@@ -138,14 +167,49 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         viewModel.fetchWhitelistApps()
     }
 
-    private fun updateController(categorizedApps: Map<String, List<App>>, downloads: List<Download>, loading: Boolean) {
+    override fun onResume() {
+        super.onResume()
+        // Skip first resume (happens right after onViewCreated)
+        // Only refresh on subsequent resumes (e.g., when returning from splash/login)
+        if (isFirstResume) {
+            isFirstResume = false
+        } else {
+            // Refresh when fragment becomes visible to catch any updates that happened while away
+            viewLifecycleOwner.lifecycleScope.launch {
+                kotlinx.coroutines.delay(100) // Delay to ensure auth state has propagated
+                viewModel.fetchWhitelistApps(forceLoading = false)
+            }
+        }
+    }
+
+    private fun updateController(categorizedApps: Map<String, List<App>>, downloads: List<Download>, loading: Boolean, requiresAuth: Boolean) {
         // Stop refresh animation when loading is complete
         if (!loading) {
             binding.swipeRefreshLayout.isRefreshing = false
         }
 
         binding.recycler.withModels {
-            setFilterDuplicates(true)
+            setFilterDuplicates(false) // Disable to ensure button state changes are reflected
+
+            // Show login prompt if Play Store apps exist but not logged in (required)
+            if (requiresAuth) {
+                add(
+                    NoAppViewModel_()
+                        .id("requires_auth")
+                        .icon(R.drawable.ic_account)
+                        .message(R.string.auth_required_for_play_store_apps)
+                        .showAction(true)
+                        .actionMessage(R.string.action_login)
+                        .actionCallback { _ ->
+                            // Navigate to splash/login screen with argument to restart app after login
+                            val bundle = Bundle().apply {
+                                putInt("destinationId", R.id.appsContainerFragment)
+                            }
+                            findNavController().navigate(R.id.splashFragment, bundle)
+                        }
+                )
+            }
+
             if (loading) {
                 // Show loading shimmer
                 for (i in 1..10) {
@@ -182,13 +246,20 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
                         // Convert App to Update for display
                         val update = Update.fromApp(requireContext(), app)
 
+                        // Use a unique ID that changes when install state changes
+                        // This forces Epoxy to rebuild the view when app is installed/uninstalled
+                        val modelId = "${app.packageName}_installed:${isInstalled}_download:${download?.downloadStatus?.name ?: "none"}"
+
+                        Log.d("AppsContainerFragment", "Building model for ${app.packageName}: installed=$isInstalled, id=$modelId")
+
                         add(
                             AppUpdateViewModel_()
-                                .id(app.packageName)
+                                .id(modelId)
                                 .update(update)
                                 .download(download)
                                 .buttonText(if (isInstalled) getString(R.string.action_uninstall) else getString(R.string.action_install))
                                 .positiveAction { _ ->
+                                    Log.d("AppsContainerFragment", "Positive action clicked for ${app.packageName}, isInstalled=$isInstalled")
                                     if (isInstalled) {
                                         uninstallApp(app)
                                     } else {
