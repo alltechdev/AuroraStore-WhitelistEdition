@@ -11,12 +11,14 @@ If your whitelist.json is empty or unreachable, NO APPS will be shown.
 ## Features
 
 ### Core Functionality
-- **Apps Tab** - Displays whitelisted apps
+- **Apps Tab** - Displays whitelisted apps by category
 - **Updates Tab** - Shows available updates for installed whitelisted apps
 - **Auto-whitelist sync** - Fetches remote whitelist every 15 seconds
 - **Automatic UI refresh** - Updates immediately when remote whitelist changes
 - **Smart change detection** - Only refreshes when whitelist actually changes
-- **Anonymous login** - Uses Spoof Manager fallback for Play Store access
+- **Smart authentication** - Only prompts for login when Play Store apps are present
+- **External app support** - Download apps from any URL without Play Store login
+- **Mixed app support** - Combine Play Store apps with external apps
 
 ### What's NOT Included
 - ❌ No Play Store browsing/categories
@@ -152,7 +154,7 @@ Your whitelist JSON must be an array of package names with optional categories:
 - packageName: Android package identifier
 - version: Version string (e.g., "1.2.3") for update detection
 - apkUrl: Direct download URL for APK file
-- iconUrl: Direct URL to app icon (optional, leave empty for no icon)
+- iconUrl: Direct URL to app icon (**required for external apps only**)
 - category: Category name (optional)
 
 **External App Features:**
@@ -161,6 +163,40 @@ Your whitelist JSON must be an array of package names with optional categories:
 - Shows in Apps tab with custom name and icon
 - Shows in Updates tab when newer version available
 - Installation works same as Play Store apps
+
+**⚠️ Important for External Apps:**
+- **Icon URL is required**: External apps MUST include an icon URL or they will appear with blank icons (no Google Play login = no automatic icon fetching)
+- **No Play Store authentication needed**: External apps work without Google Play login (when used exclusively)
+- **Mixed lists supported**: You can combine Play Store apps and external apps in the same whitelist
+
+## Authentication Flow
+
+The app has a **smart authentication system** that only requires login when necessary:
+
+### External-Only Mode
+- **No login required**: If your whitelist contains only external apps, the app skips authentication entirely
+- **Immediate access**: Users go directly to the app list without any login prompts
+- **Perfect for private app distribution**: Ideal for enterprise or closed ecosystem deployments
+
+### Mixed Mode (External + Play Store Apps)
+- **Login required when needed**: When you add Play Store apps to your whitelist, the app will prompt for login
+- **Dynamic behavior**: The login prompt appears automatically when Play Store apps are detected
+- **Persistent state**: Once logged in, the app remains authenticated until manually logged out
+
+### Authentication Scenarios
+
+| Scenario | Login Required | User Experience |
+|----------|----------------|-----------------|
+| Only external apps | ❌ No | Direct access to apps |
+| Empty whitelist | ❌ No | Direct access (empty state) |
+| Play Store apps only | ✅ Yes | Login prompt on first launch |
+| Mixed (external + Play Store) | ✅ Yes | Login prompt on first launch |
+| Adding Play Store apps later | ✅ Yes | Login prompt appears on next app launch |
+
+**Key Benefits:**
+- **Zero friction** for external-only deployments
+- **Automatic detection** - no manual configuration needed
+- **Seamless transition** when adding Play Store apps to existing external-only setups
 
 ## How Auto-Updates Work
 
