@@ -20,11 +20,16 @@
 package com.aurora.store.data.model
 
 import android.content.Context
+import android.util.Log
 import com.aurora.gplayapi.data.models.App
 import com.aurora.gplayapi.data.models.Artwork
 import com.aurora.gplayapi.data.models.EncodedCertificateSet
 import com.aurora.gplayapi.data.models.PlayFile
+import com.aurora.store.data.network.HttpClient
 import com.aurora.store.util.CertUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 /**
  * Represents an external app not available on Google Play Store
@@ -43,7 +48,7 @@ data class ExternalApp(
      * Convert ExternalApp to gplayapi App object for compatibility
      * with existing UI and download infrastructure
      */
-    fun toApp(context: Context, appDetailsHelper: com.aurora.gplayapi.helpers.AppDetailsHelper? = null): App {
+    suspend fun toApp(context: Context, appDetailsHelper: com.aurora.gplayapi.helpers.AppDetailsHelper? = null): App {
         // Get actual installed certificate if app is installed
         val certList = try {
             CertUtil.getEncodedCertificateHashes(context, packageName).map {
@@ -69,6 +74,9 @@ data class ExternalApp(
             }
         }
 
+        // Get actual file size for progress tracking
+        val fileSize = getExternalAppFileSize(apkUrl)
+
         return App(
             packageName = packageName,
             displayName = displayName,
@@ -79,7 +87,7 @@ data class ExternalApp(
                 PlayFile(
                     url = apkUrl,
                     name = "$packageName.apk",
-                    size = 0 // Unknown size until download starts
+                    size = fileSize // Use actual size for progress tracking
                 )
             ),
             isFree = true,
@@ -88,6 +96,22 @@ data class ExternalApp(
             // Mark as external app so we can identify it later
             shortDescription = "External App"
         )
+    }
+
+    /**
+     * Get file size from external app URL for proper download progress tracking
+     */
+    private suspend fun getExternalAppFileSize(url: String): Long {
+        return withContext(Dispatchers.IO) {
+            try {
+                val connection = URL(url).openConnection()
+                connection.connect()
+                connection.getHeaderField("Content-Length")?.toLongOrNull() ?: 0L
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed to get file size for $url: ${e.message}")
+                0L // Fallback to 0 if we can't determine size
+            }
+        }
     }
 
     companion object {

@@ -188,7 +188,7 @@ class UpdateWorker @AssistedInject constructor(
     /**
      * Check for updates for external apps (non-Play Store)
      */
-    private fun checkExternalAppUpdates(): List<App> {
+    private suspend fun checkExternalAppUpdates(): List<App> {
         val externalApps = whitelistProvider.getExternalApps()
         val updates = mutableListOf<App>()
 
