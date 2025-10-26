@@ -160,8 +160,14 @@ class UpdateWorker @AssistedInject constructor(
                 packages.filterNot { if (isFDroidFilterEnabled) CertUtil.isFDroidApp(context, it.packageName) else false }
             }
 
-            // Check Play Store updates
-            val playStoreUpdates = appDetailsHelper.getAppByPackageName(filteredPackages.map { it.packageName })
+            // Get external app package names to exclude from Play Store updates
+            val externalAppPackageNames = whitelistProvider.getExternalApps().map { it.packageName }.toSet()
+
+            // Check Play Store updates (excluding external apps)
+            val playStorePackageNames = filteredPackages.map { it.packageName }
+                .filter { packageName -> packageName !in externalAppPackageNames }
+
+            val playStoreUpdates = appDetailsHelper.getAppByPackageName(playStorePackageNames)
                 .filter { it.displayName.isNotEmpty() }
                 .filter { PackageUtil.isUpdatable(context, it.packageName, it.versionCode.toLong()) }
                 .toMutableList()
@@ -182,7 +188,7 @@ class UpdateWorker @AssistedInject constructor(
     /**
      * Check for updates for external apps (non-Play Store)
      */
-    private fun checkExternalAppUpdates(): List<App> {
+    private suspend fun checkExternalAppUpdates(): List<App> {
         val externalApps = whitelistProvider.getExternalApps()
         val updates = mutableListOf<App>()
 
@@ -196,7 +202,7 @@ class UpdateWorker @AssistedInject constructor(
 
                 if (externalApp.versionCode > installedJsonVersion) {
                     Log.d(TAG, "External app update available: ${externalApp.displayName} (${installedJsonVersion} -> ${externalApp.versionCode})")
-                    updates.add(externalApp.toApp(context))
+                    updates.add(externalApp.toApp(context, appDetailsHelper))
                 }
             } catch (e: Exception) {
                 // App not installed, skip

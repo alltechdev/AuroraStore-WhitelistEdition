@@ -20,11 +20,16 @@
 package com.aurora.store.data.model
 
 import android.content.Context
+import android.util.Log
 import com.aurora.gplayapi.data.models.App
 import com.aurora.gplayapi.data.models.Artwork
 import com.aurora.gplayapi.data.models.EncodedCertificateSet
 import com.aurora.gplayapi.data.models.PlayFile
+import com.aurora.store.data.network.HttpClient
 import com.aurora.store.util.CertUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 /**
  * Represents an external app not available on Google Play Store
@@ -43,7 +48,7 @@ data class ExternalApp(
      * Convert ExternalApp to gplayapi App object for compatibility
      * with existing UI and download infrastructure
      */
-    fun toApp(context: Context): App {
+    suspend fun toApp(context: Context, appDetailsHelper: com.aurora.gplayapi.helpers.AppDetailsHelper? = null): App {
         // Get actual installed certificate if app is installed
         val certList = try {
             CertUtil.getEncodedCertificateHashes(context, packageName).map {
@@ -54,19 +59,38 @@ data class ExternalApp(
             mutableListOf(EncodedCertificateSet(certificateSet = "external_app", sha256 = String()))
         }
 
+        // Get icon artwork: use provided icon URL, or fetch from Play Store
+        val iconArtwork = iconUrl?.let {
+            Log.d(ExternalApp::class.java.simpleName, "Using provided icon URL: $it")
+            Artwork(url = it)
+        } ?: run {
+            try {
+                // Try to get icon from Play Store (works even if app not installed)
+                Log.d(ExternalApp::class.java.simpleName, "No icon URL for $packageName, fetching from Play Store")
+                val playStoreApp = appDetailsHelper?.getAppByPackageName(packageName)
+                Log.d(ExternalApp::class.java.simpleName, "Play Store app found: ${playStoreApp != null}")
+                playStoreApp?.iconArtwork
+                    ?: Artwork() // Fallback to empty if Play Store lookup fails
+            } catch (e: Exception) {
+                Log.e(ExternalApp::class.java.simpleName, "Error fetching Play Store icon for $packageName", e)
+                Artwork() // Fallback to empty if any error occurs
+            }
+        }
+
+        // Get actual file size for progress tracking
+        val fileSize = getExternalAppFileSize(apkUrl)
+
         return App(
             packageName = packageName,
             displayName = displayName,
             versionName = versionName,
             versionCode = versionCode,
-            iconArtwork = iconUrl?.let {
-                Artwork(url = it)
-            } ?: Artwork(),
+            iconArtwork = iconArtwork,
             fileList = listOf(
                 PlayFile(
                     url = apkUrl,
                     name = "$packageName.apk",
-                    size = 0 // Unknown size until download starts
+                    size = fileSize // Use actual size for progress tracking
                 )
             ),
             isFree = true,
@@ -75,6 +99,22 @@ data class ExternalApp(
             // Mark as external app so we can identify it later
             shortDescription = "External App"
         )
+    }
+
+    /**
+     * Get file size from external app URL for proper download progress tracking
+     */
+    private suspend fun getExternalAppFileSize(url: String): Long {
+        return withContext(Dispatchers.IO) {
+            try {
+                val connection = URL(url).openConnection()
+                connection.connect()
+                connection.getHeaderField("Content-Length")?.toLongOrNull() ?: 0L
+            } catch (e: Exception) {
+                Log.d(ExternalApp::class.java.simpleName, "Failed to get file size for $url: ${e.message}")
+                0L // Fallback to 0 if we can't determine size
+            }
+        }
     }
 
     companion object {
