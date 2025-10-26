@@ -61,15 +61,23 @@ data class ExternalApp(
 
         // Get icon artwork: use provided icon URL, or fallback to Play Store, or empty
         val iconArtwork = iconUrl?.let {
+            Log.d(ExternalApp::class.java.simpleName, "Using provided icon URL: $it")
             Artwork(url = it)
         } ?: run {
             try {
                 // Try to get icon from Play Store
-                appDetailsHelper?.getAppByPackageName(listOf(packageName))
+                Log.d(ExternalApp::class.java.simpleName, "No icon URL provided, fetching from Play Store for $packageName")
+                Log.d(ExternalApp::class.java.simpleName, "appDetailsHelper is null: ${appDetailsHelper == null}")
+
+                val playStoreApp = appDetailsHelper?.getAppByPackageName(listOf(packageName))
                     ?.find { it.packageName == packageName }
-                    ?.iconArtwork
+
+                Log.d(ExternalApp::class.java.simpleName, "Play Store app found: ${playStoreApp != null}")
+
+                playStoreApp?.iconArtwork
                     ?: Artwork() // Fallback to empty if Play Store lookup fails
             } catch (e: Exception) {
+                Log.e(ExternalApp::class.java.simpleName, "Error fetching Play Store icon for $packageName", e)
                 Artwork() // Fallback to empty if any error occurs
             }
         }
