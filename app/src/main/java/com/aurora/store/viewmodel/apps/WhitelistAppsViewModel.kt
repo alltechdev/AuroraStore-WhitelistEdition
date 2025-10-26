@@ -95,7 +95,11 @@ class WhitelistAppsViewModel @Inject constructor(
     fun fetchWhitelistApps() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _isLoading.value = true
+                // Only show loading if we don't have data yet
+                val shouldShowLoading = _apps.value.isEmpty()
+                if (shouldShowLoading) {
+                    _isLoading.value = true
+                }
 
                 // Get external apps first
                 val externalApps = whitelistProvider.getExternalApps()
@@ -148,7 +152,10 @@ class WhitelistAppsViewModel @Inject constructor(
                 _unfilteredCategorizedApps.value = sortedCategories
                 // Apply current search filter
                 filterApps(_searchQuery.value)
-                _isLoading.value = false
+
+                if (shouldShowLoading) {
+                    _isLoading.value = false
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to fetch whitelisted apps", e)
                 _apps.value = emptyList()
