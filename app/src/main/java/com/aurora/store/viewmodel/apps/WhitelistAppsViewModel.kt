@@ -117,7 +117,7 @@ class WhitelistAppsViewModel @Inject constructor(
                 }
 
                 // Convert external apps to App objects
-                val externalAppsList = externalApps.map { it.toApp(context) }
+                val externalAppsList = externalApps.map { it.toApp(context, appDetailsHelper) }
 
                 // Combine both lists
                 val allApps = (playStoreApps + externalAppsList)
