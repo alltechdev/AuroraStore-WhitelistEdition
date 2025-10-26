@@ -88,12 +88,24 @@ class UpdateWorker @AssistedInject constructor(
             )
         )]
 
-        if (updateMode == UpdateMode.DISABLED || !AccountProvider.isLoggedIn(context)) {
+        if (updateMode == UpdateMode.DISABLED) {
             Log.i(TAG, "Updates are disabled, bailing out!")
             return Result.failure()
         }
 
-        if (!authProvider.isSavedAuthDataValid()) {
+        // Check if we have any external apps that can be updated without login
+        val hasExternalApps = whitelistProvider.getExternalApps().isNotEmpty()
+        val isLoggedIn = AccountProvider.isLoggedIn(context)
+
+        if (!isLoggedIn && !hasExternalApps) {
+            Log.i(TAG, "Not logged in and no external apps, bailing out!")
+            return Result.failure()
+        }
+
+        if (!authProvider.isSavedAuthDataValid() && hasExternalApps && !isLoggedIn) {
+            Log.i(TAG, "AuthData is not valid, but we have external apps, continuing...")
+            // Continue with external apps only
+        } else if (!authProvider.isSavedAuthDataValid()) {
             Log.i(TAG, "AuthData is not valid, retrying later!")
             return Result.retry()
         }
@@ -167,10 +179,15 @@ class UpdateWorker @AssistedInject constructor(
             val playStorePackageNames = filteredPackages.map { it.packageName }
                 .filter { packageName -> packageName !in externalAppPackageNames }
 
-            val playStoreUpdates = appDetailsHelper.getAppByPackageName(playStorePackageNames)
-                .filter { it.displayName.isNotEmpty() }
-                .filter { PackageUtil.isUpdatable(context, it.packageName, it.versionCode.toLong()) }
-                .toMutableList()
+            val playStoreUpdates = if (AccountProvider.isLoggedIn(context)) {
+                appDetailsHelper.getAppByPackageName(playStorePackageNames)
+                    .filter { it.displayName.isNotEmpty() }
+                    .filter { PackageUtil.isUpdatable(context, it.packageName, it.versionCode.toLong()) }
+                    .toMutableList()
+            } else {
+                Log.i(TAG, "Not logged in, skipping Play Store updates")
+                mutableListOf()
+            }
 
             // Check external app updates
             val externalUpdates = checkExternalAppUpdates()
