@@ -217,6 +217,30 @@ class UpdateWorker @AssistedInject constructor(
      */
     private suspend fun getSelfUpdate(): App? {
         return withContext(Dispatchers.IO) {
+            // First, check if Aurora Store is defined as an external app
+            val auroraPackage = BuildConfig.APPLICATION_ID
+            val externalAuroraUpdate = whitelistProvider.getExternalApp(auroraPackage)
+
+            if (externalAuroraUpdate != null) {
+                Log.i(TAG, "Found Aurora Store as external app: ${externalAuroraUpdate.displayName}")
+                try {
+                    // Check if external app version is newer than current
+                    val installedVersion = getInstalledAppVersion(auroraPackage)
+                    if (externalAuroraUpdate.versionCode > installedVersion) {
+                        Log.i(TAG, "External Aurora update available: ${installedVersion} -> ${externalAuroraUpdate.versionCode}")
+                        return@withContext externalAuroraUpdate.toApp(context, appDetailsHelper)
+                    } else {
+                        Log.i(TAG, "External Aurora app is up to date: ${installedVersion}")
+                        return@withContext null
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to process external Aurora update", e)
+                    return@withContext null
+                }
+            }
+
+            // Fall back to original self-update mechanism if not found as external app
+            Log.i(TAG, "Aurora Store not found as external app, checking traditional self-update")
             val updateUrl = when (BuildType.CURRENT) {
                 BuildType.RELEASE -> Constants.UPDATE_URL_STABLE
                 BuildType.NIGHTLY -> Constants.UPDATE_URL_NIGHTLY
@@ -264,6 +288,19 @@ class UpdateWorker @AssistedInject constructor(
                 notificationID,
                 NotificationUtil.getUpdateNotification(context, updates)
             )
+        }
+    }
+
+    /**
+     * Get installed app version code for comparison
+     */
+    private fun getInstalledAppVersion(packageName: String): Long {
+        return try {
+            val packageInfo = context.packageManager.getPackageInfo(packageName, 0)
+            PackageInfoCompat.getLongVersionCode(packageInfo)
+        } catch (e: Exception) {
+            Log.d(TAG, "Could not get version for $packageName: ${e.message}")
+            0L // App not installed or error
         }
     }
 }
