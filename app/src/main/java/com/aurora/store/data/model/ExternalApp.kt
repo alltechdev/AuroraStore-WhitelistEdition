@@ -108,7 +108,7 @@ data class ExternalApp(
                 connection.connect()
                 connection.getHeaderField("Content-Length")?.toLongOrNull() ?: 0L
             } catch (e: Exception) {
-                Log.d(TAG, "Failed to get file size for $url: ${e.message}")
+                Log.d(ExternalApp::class.java.simpleName, "Failed to get file size for $url: ${e.message}")
                 0L // Fallback to 0 if we can't determine size
             }
         }
