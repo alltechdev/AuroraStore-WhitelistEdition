@@ -69,8 +69,13 @@ data class ExternalApp(
                 Log.d(ExternalApp::class.java.simpleName, "No icon URL provided, fetching from Play Store for $packageName")
                 Log.d(ExternalApp::class.java.simpleName, "appDetailsHelper is null: ${appDetailsHelper == null}")
 
-                val playStoreApp = appDetailsHelper?.getAppByPackageName(listOf(packageName))
-                    ?.find { it.packageName == packageName }
+                val playStoreApp = try {
+                    appDetailsHelper?.getAppByPackageName(packageName)
+                } catch (e: Exception) {
+                    Log.d(ExternalApp::class.java.simpleName, "Single package lookup failed, trying list approach: ${e.message}")
+                    appDetailsHelper?.getAppByPackageName(listOf(packageName))
+                        ?.find { it.packageName == packageName }
+                }
 
                 Log.d(ExternalApp::class.java.simpleName, "Play Store app found: ${playStoreApp != null}")
 
