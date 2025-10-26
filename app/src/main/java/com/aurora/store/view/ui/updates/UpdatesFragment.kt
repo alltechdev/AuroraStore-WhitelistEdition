@@ -110,6 +110,8 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
             }
         }
 
+        // Initial fetch when navigating to Updates tab
+        viewModel.fetchUpdates()
     }
 
     private fun updateController(appList: Map<Update, Download?>?) {
