@@ -60,7 +60,7 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
         // Enable swipe refresh for apps page
         binding.swipeRefreshLayout.isEnabled = true
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.fetchWhitelistApps()
+            viewModel.fetchWhitelistApps(forceLoading = true)
         }
 
         // Toolbar

@@ -92,11 +92,11 @@ class WhitelistAppsViewModel @Inject constructor(
         }
     }
 
-    fun fetchWhitelistApps() {
+    fun fetchWhitelistApps(forceLoading: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Only show loading if we don't have data yet
-                val shouldShowLoading = _apps.value.isEmpty()
+                // Show loading if we don't have data yet or if explicitly requested (e.g., pull-to-refresh)
+                val shouldShowLoading = _apps.value.isEmpty() || forceLoading
                 if (shouldShowLoading) {
                     _isLoading.value = true
                 }
