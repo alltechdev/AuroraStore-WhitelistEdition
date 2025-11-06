@@ -1,0 +1,224 @@
+name: Build Custom Aurora Store
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  build-custom:
+    if: contains(github.event.issue.labels.*.name, 'aurora-custom-build')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Parse issue data
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueBody = context.payload.issue.body;
+
+            const jsonMatch = issueBody.match(/```json\n([\s\S]*?)\n```/);
+            if (!jsonMatch) {
+              core.setFailed('Could not find configuration in issue');
+              return;
+            }
+
+            const config = JSON.parse(jsonMatch[1]);
+
+            core.setOutput('buildId', config.buildId);
+            core.setOutput('gistUrl', config.gistUrl);
+            core.setOutput('appCount', config.appCount);
+
+            const fs = require('fs');
+            fs.writeFileSync('build-config.json', JSON.stringify(config, null, 2));
+
+      - name: Comment - Starting build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🔨 **Build Started**\n\nYour custom Aurora Store is being built. This will take approximately 3-4 minutes.\n\nBuild ID: `${{ steps.parse.outputs.buildId }}`'
+            })
+
+      - name: Update whitelist URL in code
+        run: |
+          GIST_URL="${{ steps.parse.outputs.gistUrl }}"
+
+          # Validate Gist URL format (prevent injection)
+          if ! echo "$GIST_URL" | grep -E '^https://gist\.githubusercontent\.com/[a-zA-Z0-9_-]+/[a-f0-9]+/raw/[a-zA-Z0-9_.-]+$'; then
+            echo "Invalid Gist URL format"
+            exit 1
+          fi
+
+          # Update RemoteWhitelistProvider.kt with new URL
+          sed -i 's|"https://api\.github\.com/repos/alltechdev/alltech\.dev/contents/whitelist\.json?ref=main"|"'"$GIST_URL"'"|g' \
+            app/src/main/java/com/aurora/store/data/providers/RemoteWhitelistProvider.kt
+
+          echo "Updated whitelist URL successfully"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleVanillaRelease --no-daemon --stacktrace
+
+      - name: Prepare APK
+        id: prepare_apk
+        run: |
+          OUTPUT_DIR="app/build/outputs/apk/vanilla/release"
+          APK_FILE=$(find "$OUTPUT_DIR" -name "*.apk" | head -n 1)
+
+          if [ -z "$APK_FILE" ] || [ ! -f "$APK_FILE" ]; then
+            echo "APK not found"
+            exit 1
+          fi
+
+          OUTPUT_NAME="AuroraStore-Custom-${{ steps.parse.outputs.buildId }}.apk"
+          cp "$APK_FILE" "$OUTPUT_NAME"
+
+          echo "apk_file=$OUTPUT_NAME" >> $GITHUB_OUTPUT
+          echo "APK prepared: $OUTPUT_NAME"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.parse.outputs.buildId }}
+          release_name: Custom Aurora Store (${{ steps.parse.outputs.buildId }})
+          body: |
+            ## Custom Aurora Store Build Complete
+
+            **Build ID:** ${{ steps.parse.outputs.buildId }}
+            **Apps in Whitelist:** ${{ steps.parse.outputs.appCount }}
+
+            ### Installation
+            1. Download the APK file below
+            2. Enable "Install from unknown sources" on your Android device
+            3. Install the APK
+
+            ### Updating Your Whitelist
+            Your Aurora Store fetches apps from:
+            ```
+            ${{ steps.parse.outputs.gistUrl }}
+            ```
+
+            To update which apps appear:
+            1. Edit the Gist at the URL above
+            2. All installed Aurora Store apps will automatically sync within 15 seconds
+
+            ---
+            Built by [Aurora Store Custom Builder](https://github.com/${{ github.repository }})
+          draft: false
+          prerelease: false
+
+      - name: Upload APK to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.prepare_apk.outputs.apk_file }}
+          asset_name: ${{ steps.prepare_apk.outputs.apk_file }}
+          asset_content_type: application/vnd.android.package-archive
+
+      - name: Comment - Success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const downloadUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/download/${{ steps.parse.outputs.buildId }}/${{ steps.prepare_apk.outputs.apk_file }}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ✅ APK Build Complete!
+
+            Your custom Aurora Store is ready to download!
+
+            ### Download
+            🔗 **[Download APK](${downloadUrl})**
+
+            ### Build Details
+            - **Build ID:** \`${{ steps.parse.outputs.buildId }}\`
+            - **Apps in Whitelist:** ${{ steps.parse.outputs.appCount }}
+
+            ### Your Whitelist URL
+            \`\`\`
+            ${{ steps.parse.outputs.gistUrl }}
+            \`\`\`
+
+            ### How to Update Apps
+            1. Visit your Gist: ${{ steps.parse.outputs.gistUrl }}
+            2. Click "Edit" on GitHub
+            3. Modify the JSON array (add/remove package names)
+            4. Save the Gist
+            5. All installed Aurora Store apps will sync automatically within 15 seconds
+
+            ### Installation Instructions
+            1. Download the APK file using the link above
+            2. On your Android device, enable "Install from unknown sources"
+            3. Open the downloaded APK file to install
+
+            ---
+            *Build completed in ${Math.round((Date.now() - new Date(context.payload.issue.created_at).getTime()) / 1000)} seconds*
+            `
+            });
+
+            github.rest.issues.update({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              labels: ['aurora-custom-build', 'completed']
+            });
+
+      - name: Comment - Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Build Failed
+
+            Unfortunately, the Aurora Store build encountered an error.
+
+            ### Troubleshooting
+            - Check the [workflow logs](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details
+            - Verify your whitelist JSON is valid
+            - Try again with a different configuration
+
+            ### Need Help?
+            Build ID: \`${{ steps.parse.outputs.buildId }}\`
+            Workflow Run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+            `
+            });
+
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['build-failed']
+            });

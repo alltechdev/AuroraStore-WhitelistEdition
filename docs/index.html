@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Aurora Store - Custom Builder</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.min.css" rel="stylesheet"/>
+        <style>
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+            .hero-text {
+                color: white;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+            .card {
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            }
+            textarea {
+                font-family: 'Monaco', 'Courier New', monospace;
+                font-size: 14px;
+            }
+            .validation-message {
+                padding: 10px;
+                border-radius: 5px;
+                margin-top: 10px;
+            }
+            .validation-success {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .validation-error {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container pt-5 pb-5">
+            <section class="text-center mb-4">
+                <h1 class="fw-bold mb-3 hero-text">
+                    <i class="fas fa-mobile-alt me-2"></i>Aurora Store Custom Builder
+                </h1>
+                <p class="hero-text fs-5">Create your personalized Aurora Store with custom app whitelist</p>
+            </section>
+
+            <section class="row d-flex justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card p-4">
+                        <h4 class="mb-4"><i class="fas fa-list-check me-2"></i>Configure Your App Whitelist</h4>
+
+                        <form id="auroraForm">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold" for="whitelist">
+                                    App Package Names (JSON Array)
+                                </label>
+                                <textarea
+                                    class="form-control"
+                                    id="whitelist"
+                                    rows="12"
+                                    required
+                                    placeholder='[&#10;  "com.whatsapp",&#10;  "org.telegram.messenger",&#10;  "com.brave.browser"&#10;]'
+                                ></textarea>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Enter a JSON array of Android package names
+                                </div>
+                                <div id="validationMessage"></div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>How it works:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Your whitelist will be stored in a GitHub Gist</li>
+                                    <li>Your custom Aurora Store APK will auto-fetch from this Gist</li>
+                                    <li>Update the Gist later to update all installed apps</li>
+                                    <li>Build time: approximately 3-4 minutes</li>
+                                </ul>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg btn-block w-100">
+                                <i class="fas fa-hammer me-2"></i>Build My Aurora Store
+                            </button>
+                        </form>
+
+                        <hr class="mt-4"/>
+                        <p class="text-muted text-center mb-0">
+                            <a href="https://github.com/alltechdev/AuroraStore-WhitelistEdition" target="_blank">
+                                <i class="fab fa-github"></i> View on GitHub
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.umd.min.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html>
+
