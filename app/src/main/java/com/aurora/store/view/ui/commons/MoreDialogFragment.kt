@@ -390,13 +390,7 @@ class MoreDialogFragment : DialogFragment() {
     }
 
     private fun getExtraOptions(): List<Option> {
-        return listOf(
-            ViewOption(
-                title = R.string.title_settings,
-                icon = R.drawable.ic_menu_settings,
-                destinationID = R.id.settingsFragment
-            )
-        )
+        return emptyList()
     }
 
     private fun handleComposeOptionClick(context: Context, screen: Screen) {

@@ -239,13 +239,8 @@ abstract class BaseFlavouredOnboardingFragment : BaseFragment<FragmentOnboarding
     }
 
     open fun setupAutoUpdates() {
-        val updateMode = when {
-            requireContext().isIgnoringBatteryOptimizations() -> UpdateMode.CHECK_AND_INSTALL
-            requireContext().areNotificationsEnabled() -> UpdateMode.CHECK_AND_NOTIFY
-            else -> UpdateMode.DISABLED
-        }
-
-        save(PREFERENCE_UPDATES_AUTO, updateMode.ordinal)
+        // Default to disabled - user must explicitly enable auto-updates
+        save(PREFERENCE_UPDATES_AUTO, UpdateMode.DISABLED.ordinal)
 
         onboardingViewModel.updateHelper.scheduleAutomatedCheck()
     }

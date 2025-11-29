@@ -84,7 +84,7 @@ class UpdateWorker @AssistedInject constructor(
             Preferences.getInteger(
                 context,
                 PREFERENCE_UPDATES_AUTO,
-                UpdateMode.CHECK_AND_INSTALL.ordinal
+                UpdateMode.DISABLED.ordinal
             )
         )]
 

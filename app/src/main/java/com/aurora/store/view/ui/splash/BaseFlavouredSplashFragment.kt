@@ -95,10 +95,6 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
                     R.id.menu_spoof_manager -> {
                         findNavController().navigate(R.id.spoofFragment)
                     }
-
-                    R.id.menu_settings -> {
-                        findNavController().navigate(R.id.settingsFragment)
-                    }
                 }
                 true
             }
@@ -130,8 +126,9 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
                     }
 
                     AuthState.Unavailable -> {
-                        updateStatus(getString(R.string.session_login))
-                        updateActionLayout(true)
+                        // Auto-login with anonymous account
+                        updateStatus(getString(R.string.requesting_new_session))
+                        viewModel.buildAnonymousAuthData()
                     }
 
                     AuthState.SignedIn -> {
@@ -144,8 +141,9 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
                     }
 
                     AuthState.SignedOut -> {
-                        updateStatus(getString(R.string.session_scrapped))
-                        updateActionLayout(true)
+                        // Auto-login with anonymous account
+                        updateStatus(getString(R.string.requesting_new_session))
+                        viewModel.buildAnonymousAuthData()
                     }
 
                     AuthState.Verifying -> {
