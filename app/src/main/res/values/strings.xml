@@ -19,7 +19,7 @@
   ~
   -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name" translatable="false">"Aurora Store"</string>
+    <string name="app_name" translatable="false">"App Store"</string>
     <string name="download_speed_bytes" translatable="false">%1$d B/s</string>
     <string name="download_speed_kb" translatable="false">%1$s KB/s</string>
     <string name="download_speed_mb" translatable="false">%1$s MB/s</string>
@@ -34,9 +34,9 @@
     <string name="about_bitcoin_eth">"Ethereum"</string>
     <string name="about_bitcoin_eth_summary">"Donate via Ethereum (ETH)"</string>
     <string name="about_fdroid">"F-Droid"</string>
-    <string name="about_fdroid_summary">"Get the Aurora Store via F-Droid."</string>
+    <string name="about_fdroid_summary">"Get the App Store via F-Droid."</string>
     <string name="about_gitlab">"GitLab"</string>
-    <string name="about_gitlab_summary">"Get the Aurora Store source code from Aurora OSS on GitLab."</string>
+    <string name="about_gitlab_summary">"Get the App Store source code from Aurora OSS on GitLab."</string>
     <string name="about_libera">"Liberapay"</string>
     <string name="about_libera_summary">"Become a patron on Liberapay"</string>
     <string name="about_paypal">PayPal</string>
@@ -44,11 +44,11 @@
     <string name="about_telegram">"Telegram"</string>
     <string name="about_telegram_summary">"Join the Aurora Support group for discussions or suggestions."</string>
     <string name="about_xda">"XDA Forums"</string>
-    <string name="about_xda_summary">"See the Aurora Store XDA thread for discussions or suggestions."</string>
+    <string name="about_xda_summary">"See the App Store XDA thread for discussions or suggestions."</string>
     <string name="account_anonymous">"Anonymous"</string>
     <string name="account_google">"Google"</string>
     <string name="account_login_using">Log in using</string>
-    <string name="account_logout">Log out from Aurora</string>
+    <string name="account_logout">Log out from App Store</string>
     <string name="account_login_trouble">Having trouble logging in? Click below to spoof your device.</string>
     <string name="action_back">"Back"</string>
     <string name="action_whitelist">"Whitelist"</string>
@@ -72,6 +72,7 @@
     <string name="action_filter_paid_apps">"Paid"</string>
     <string name="action_filter_rating">"Ratings"</string>
     <string name="action_finish">"Finish"</string>
+    <string name="action_get_started">"Get Started"</string>
     <string name="action_get_local_apk">"Save app bundle"</string>
     <string name="action_grant">"Grant"</string>
     <string name="action_granted">"Granted"</string>
@@ -225,7 +226,7 @@
     <string name="pref_updates_incompatible">Show updates that may fail</string>
     <string name="pref_updates_incompatible_desc">Display updates for incompatible or disabled apps that may fail to install</string>
     <string name="pref_aurora_only">Filter apps from other sources</string>
-    <string name="pref_aurora_only_desc">Don\'t check for updates for apps installed from sources outside Aurora Store</string>
+    <string name="pref_aurora_only_desc">Don\'t check for updates for apps installed from sources outside App Store</string>
     <string name="purchase_failed">"Download failed"</string>
     <string name="purchase_invalid">"App not purchased"</string>
     <string name="purchase_unsupported">"App not supported"</string>
@@ -344,13 +345,14 @@
     <string name="pref_ui_layout">Layout</string>
     <string name="pref_ui_layout_tab">Select default tab</string>
     <string name="app_links_title">App links</string>
-    <string name="app_links_desc">Allow Aurora Store to open supported links</string>
+    <string name="app_links_desc">Allow App Store to open supported links</string>
     <string name="app_link_play_store" translatable="false">play.google.com</string>
     <string name="google_play_store_desc">Google Play, also known as the Google Play Store and formerly Android Market.</string>
     <string name="app_link_android_market" translatable="false">market.android.com</string>
     <string name="android_market_desc">Android Market was an online store offering software applications designed for Android devices, retired in 2017.</string>
     <string name="failed_apk_export">Failed to export APKs</string>
     <string name="no_apps_available">No apps available</string>
+    <string name="all_apps_installed">All apps are already installed. Check Updates tab for available updates.</string>
     <string name="app_info_downloads">"Downloads"</string>
     <string name="app_info_updated_on">"Last updated"</string>
     <string name="app_info_min_android">"Minimum Android Version"</string>
@@ -367,13 +369,13 @@
     <string name="onboarding_permission_esa_desc">To save APK expansion files (OBBs) for large apps &amp; games.</string>
     <string name="onboarding_permission_esm">"External storage manager"</string>
     <string name="onboarding_permission_installer">"Installer permission"</string>
-    <string name="onboarding_permission_installer_desc">"Allow installing apps from Aurora Store"</string>
+    <string name="onboarding_permission_installer_desc">"Allow installing apps from App Store"</string>
     <string name="onboarding_permission_installer_legacy_desc">"Allow installation of apps from unknown sources"</string>
     <string name="onboarding_permission_notifications">"Notifications"</string>
     <string name="onboarding_permission_notifications_desc">"Send notifications regarding installations status"</string>
     <string name="onboarding_permission_doze">"Background downloads"</string>
-    <string name="onboarding_permission_doze_desc">"Allow Aurora Store to download and update apps in background"</string>
-    <string name="onboarding_permission_select">"Aurora Store requires following permissions"</string>
+    <string name="onboarding_permission_doze_desc">"Allow App Store to download and update apps in background"</string>
+    <string name="onboarding_permission_select">"App Store requires following permissions"</string>
     <string name="onboarding_gms_agreement">"I have read and agree to the microG Terms of Service and Privacy Policy"</string>
     <string name="onboarding_gms_missing">"We couldn't find Google Play Services on your device, several popular apps now require it to function properly!"</string>
     <string name="onboarding_gms_microg">"microG is a free and open-source implementation that provides similar functionality to run apps dependent on Google Play Services for Android devices through re-implementation.\n\nmicroG enables apps to access those Google APIs, enhancing compatibility for users while offering privacy benefits. \n\nmicroG will run automatically in the background when you open applications dependent on Google Mobile Services."</string>
@@ -406,21 +408,21 @@
     <string name="source_code_subtitle">Find out what\'s inside</string>
     <string name="license_subtitle" translatable="false">The GNU General Public License v3.0</string>
     <string name="privacy_policy_title">Privacy policy</string>
-    <string name="privacy_policy_subtitle">Learn how Aurora Store uses your data</string>
+    <string name="privacy_policy_subtitle">Learn how App Store uses your data</string>
     <string name="disclaimer_subtitle">Accountability and responsibility</string>
 
     <!-- AboutFragment -->
-    <string name="made_with_love">Forked from Aurora Store by @ars18-JTechForums</string>
+    <string name="made_with_love">Made by @ars18-JTechForums</string>
     <string name="version" translatable="false">v<xliff:g id="version_name">%1$s</xliff:g> (<xliff:g id="version_code">%2$d</xliff:g>)</string>
-    <string name="about_aurora_store_title">About Aurora Updater</string>
-    <string name="about_aurora_store_subtitle">Learn more about Aurora Updater</string>
-    <string name="about_aurora_store_summary">Aurora Updater is a simplified fork of Aurora Store focused solely on updating your existing apps. It provides a clean interface to view and manage app updates without the ability to browse or download new applications.\n\nForked from Aurora Store by @ars18-JTechForums.\n\nAurora Updater enables you to update apps from Google Play using anonymous authentication. Unlike the original Aurora Store, this version removes all browsing functionality and focuses purely on keeping your installed apps up to date.\n\nPlease note that Aurora Updater does not have any approval, sponsorship or authorization from Google, Google Play, any apps updated through Aurora Updater or any app developers; neither does Aurora Updater have any affiliation, cooperation or connection with them.</string>
+    <string name="about_aurora_store_title">About App Store</string>
+    <string name="about_aurora_store_subtitle">Learn more about App Store</string>
+    <string name="about_aurora_store_summary">App Store is focused solely on updating your existing apps. It provides a clean interface to view and manage app updates without the ability to browse or download new applications.\n\nMade by @ars18-JTechForums.\n\nApp Store enables you to update apps from Google Play using anonymous authentication. This version removes all browsing functionality and focuses purely on keeping your installed apps up to date.\n\nPlease note that App Store does not have any approval, sponsorship or authorization from Google, Google Play, any apps updated through App Store or any app developers; neither does App Store have any affiliation, cooperation or connection with them.</string>
     
-    <string name="about_aurora_updater_github_title">Aurora Updater GitHub</string>
+    <string name="about_aurora_updater_github_title">App Store GitHub</string>
     <string name="about_aurora_updater_github_summary">View source code and report issues</string>
-    <string name="about_original_aurora_store_title">Original Aurora Store</string>
-    <string name="about_original_aurora_store_summary">Visit the original Aurora Store project</string>
-    <string name="aurora_updater_repo_title">Aurora Updater Repository</string>
+    <string name="about_original_aurora_store_title">Source Project</string>
+    <string name="about_original_aurora_store_summary">Visit the source project</string>
+    <string name="aurora_updater_repo_title">App Store Repository</string>
     <string name="aurora_updater_repo_summary">Source code and releases</string>
 
     <!-- MoreDialogFragment -->
@@ -430,7 +432,7 @@
 
     <!-- InstallationPreference -->
     <string name="pref_clear_device_owner_title">Clear device owner</string>
-    <string name="pref_clear_device_owner_summary">Removes Aurora Store as the device owner app</string>
+    <string name="pref_clear_device_owner_summary">Removes App Store as the device owner app</string>
     <string name="pref_clear_device_owner_desc">This will revoke session installer\'s permission to silently install app. Proceed with clearing device ownership?</string>
 
     <!-- DispenserFragment -->
@@ -440,7 +442,7 @@
     <!-- DialogDispenserInput-->
     <string name="no_dispensers_available">No dispensers available</string>
     <string name="add_dispenser_title">Add dispenser</string>
-    <string name="add_dispenser_summary">Add a token dispenser to Aurora Store. Token dispensers provide account credentials to Aurora Store for logging in anonymously.</string>
+    <string name="add_dispenser_summary">Add a token dispenser to App Store. Token dispensers provide account credentials to App Store for logging in anonymously.</string>
     <string name="add_dispenser_error">Invalid URL</string>
     <string name="add_dispenser_hint">Dispenser URL</string>
     <string name="remove_dispenser_title">Remove dispenser</string>
@@ -475,8 +477,8 @@
     <string name="checking_updates">Checking for updates</string>
 
     <!-- ForceRestartDialog -->
-    <string name="force_restart_title">Restart Aurora Store</string>
-    <string name="force_restart_summary">Aurora Store needs to be restarted to apply the newly changed settings</string>
+    <string name="force_restart_title">Restart App Store</string>
+    <string name="force_restart_summary">App Store needs to be restarted to apply the newly changed settings</string>
 
     <!-- DownloadFragment -->
     <string name="status_downloading">Downloading</string>

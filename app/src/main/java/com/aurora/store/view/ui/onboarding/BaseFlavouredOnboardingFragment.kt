@@ -109,53 +109,65 @@ abstract class BaseFlavouredOnboardingFragment : BaseFragment<FragmentOnboarding
         updateBackwardButton(false)
         updateForwardButton(true)
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            // Combine both relevant flows
-            combine(
-                microGViewModel.checked,
-                onboardingViewModel.currentPage
-            ) { isChecked, page -> isChecked to page }.collect { (isChecked, page) ->
-                when (page) {
-                    OnboardingPage.WELCOME -> {
-                        updateBackwardButton(enabled = false)
-                        updateForwardButton(enabled = true)
-                    }
+        // Handle single page onboarding (just welcome screen)
+        if (pages.size == 1) {
+            updateBackwardButton(enabled = false)
+            binding.btnBackward.visibility = View.GONE
+            binding.tabLayout.visibility = View.GONE
+            updateForwardButton(
+                enabled = true,
+                resId = R.string.action_get_started,
+                action = { finishOnboarding() }
+            )
+        } else {
+            viewLifecycleOwner.lifecycleScope.launch {
+                // Combine both relevant flows
+                combine(
+                    microGViewModel.checked,
+                    onboardingViewModel.currentPage
+                ) { isChecked, page -> isChecked to page }.collect { (isChecked, page) ->
+                    when (page) {
+                        OnboardingPage.WELCOME -> {
+                            updateBackwardButton(enabled = false)
+                            updateForwardButton(enabled = true)
+                        }
 
-                    OnboardingPage.PERMISSIONS -> {
-                        updateBackwardButton(enabled = true)
-                        val isLastPage = pages.size == 2
+                        OnboardingPage.PERMISSIONS -> {
+                            updateBackwardButton(enabled = true)
+                            val isLastPage = pages.size == 2
 
-                        updateForwardButton(
-                            enabled = true,
-                            resId = if (isLastPage) R.string.action_finish else R.string.action_next,
-                            if (isLastPage) {
-                                { finishOnboarding() }
-                            } else {
-                                null
-                            }
-                        )
-                    }
-
-                    OnboardingPage.GSF -> {
-                        updateBackwardButton(enabled = true)
-
-                        if (isChecked) {
-                            val isInstalled = PackageUtil.isMicroGBundleInstalled(requireContext())
                             updateForwardButton(
-                                enabled = isInstalled,
-                                resId = R.string.action_finish,
-                                action = if (isInstalled) {
+                                enabled = true,
+                                resId = if (isLastPage) R.string.action_finish else R.string.action_next,
+                                if (isLastPage) {
                                     { finishOnboarding() }
                                 } else {
                                     null
                                 }
                             )
-                        } else {
-                            updateForwardButton(
-                                enabled = false,
-                                resId = R.string.action_finish,
-                                action = { finishOnboarding() }
-                            )
+                        }
+
+                        OnboardingPage.GSF -> {
+                            updateBackwardButton(enabled = true)
+
+                            if (isChecked) {
+                                val isInstalled = PackageUtil.isMicroGBundleInstalled(requireContext())
+                                updateForwardButton(
+                                    enabled = isInstalled,
+                                    resId = R.string.action_finish,
+                                    action = if (isInstalled) {
+                                        { finishOnboarding() }
+                                    } else {
+                                        null
+                                    }
+                                )
+                            } else {
+                                updateForwardButton(
+                                    enabled = false,
+                                    resId = R.string.action_finish,
+                                    action = { finishOnboarding() }
+                                )
+                            }
                         }
                     }
                 }

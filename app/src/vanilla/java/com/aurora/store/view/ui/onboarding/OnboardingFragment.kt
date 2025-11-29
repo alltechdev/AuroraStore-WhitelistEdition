@@ -72,8 +72,7 @@ class OnboardingFragment : BaseFlavouredOnboardingFragment() {
 
     override fun onboardingPages(): List<Fragment> {
         return listOf(
-            WelcomeFragment(),
-            PermissionsFragment.newInstance()
+            WelcomeFragment()
         )
     }
 

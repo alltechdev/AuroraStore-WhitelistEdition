@@ -36,8 +36,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/img"
-        android:layout_centerInParent="true"
+        android:layout_centerHorizontal="true"
         android:layout_marginVertical="@dimen/margin_small"
+        android:layout_marginHorizontal="@dimen/margin_xlarge"
+        android:gravity="center"
+        android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.Aurora.Line1"
         tools:text="No updates available" />
 

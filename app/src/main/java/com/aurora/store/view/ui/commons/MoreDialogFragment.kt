@@ -24,7 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,8 +53,6 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.aurora.Constants
-import com.aurora.Constants.URL_TOS
-import com.aurora.extensions.browse
 import com.aurora.extensions.getStyledAttributeColor
 import com.aurora.extensions.navigate
 import com.aurora.extensions.setAppTheme
@@ -129,19 +126,10 @@ class MoreDialogFragment : DialogFragment() {
                         )
                     ) {
                         AppBar(onBackgroundColor = onPrimaryColor)
-                        AccountHeader(
-                            backgroundColor = secondaryColor,
-                            onBackgroundColor = onSecondaryColor
-                        )
                         Column(
                             modifier = Modifier
                                 .clip(
-                                    RoundedCornerShape(
-                                        topStart = 2.dp,
-                                        topEnd = 2.dp,
-                                        bottomStart = 25.dp,
-                                        bottomEnd = 25.dp
-                                    )
+                                    RoundedCornerShape(25.dp)
                                 )
                                 .background(color = secondaryColor)
                         ) {
@@ -178,7 +166,6 @@ class MoreDialogFragment : DialogFragment() {
                                 }
                             )
                         }
-                        Footer(onPrimaryColor)
                     }
                 }
             }
@@ -211,37 +198,6 @@ class MoreDialogFragment : DialogFragment() {
                 },
                 colorFilter = ColorFilter.tint(onBackgroundColor)
             )
-        }
-    }
-
-    @Composable
-    fun Footer(tintColor: Color) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally)
-        ) {
-            TextButton(onClick = { requireContext().browse(Constants.URL_POLICY) }) {
-                Text(
-                    text = stringResource(id = R.string.privacy_policy_title),
-                    fontWeight = FontWeight.Light,
-                    color = tintColor,
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Text(text = "•", color = tintColor)
-            TextButton(onClick = { requireContext().browse(URL_TOS) }) {
-                Text(
-                    text = stringResource(id = R.string.menu_terms),
-                    fontWeight = FontWeight.Light,
-                    color = tintColor,
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
         }
     }
 
@@ -439,11 +395,6 @@ class MoreDialogFragment : DialogFragment() {
                 title = R.string.title_settings,
                 icon = R.drawable.ic_menu_settings,
                 destinationID = R.id.settingsFragment
-            ),
-            ComposeOption(
-                title = R.string.title_about,
-                icon = R.drawable.ic_menu_about,
-                screen = Screen.About
             )
         )
     }

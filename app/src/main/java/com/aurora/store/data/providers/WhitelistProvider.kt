@@ -183,8 +183,8 @@ class WhitelistProvider @Inject constructor(
     fun hasOnlyExternalApps(): Boolean {
         val allEntries = whitelist
         if (allEntries.isEmpty()) {
-            // Empty whitelist = no apps = skip login
-            return true
+            // Empty whitelist = require login (whitelist may load later)
+            return false
         }
 
         // Check if ALL entries are external apps

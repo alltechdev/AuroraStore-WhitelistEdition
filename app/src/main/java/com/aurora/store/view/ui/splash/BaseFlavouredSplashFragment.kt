@@ -11,16 +11,29 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.aurora.Constants.PACKAGE_NAME_PLAY_STORE
 import com.aurora.extensions.getPackageName
-import com.aurora.extensions.navigate
 import com.aurora.store.R
-import com.aurora.store.compose.navigation.Screen
 import com.aurora.store.data.model.AuthState
 import com.aurora.store.databinding.FragmentSplashBinding
 import com.aurora.store.util.PackageUtil
+import com.aurora.Constants
+import com.aurora.store.data.installer.AppInstaller
+import com.aurora.store.data.model.Installer
 import com.aurora.store.util.Preferences
+import com.aurora.store.util.Preferences.PREFERENCE_AUTO_DELETE
+import com.aurora.store.util.Preferences.PREFERENCE_DEFAULT
 import com.aurora.store.util.Preferences.PREFERENCE_DEFAULT_SELECTED_TAB
+import com.aurora.store.util.Preferences.PREFERENCE_DISPENSER_URLS
+import com.aurora.store.util.Preferences.PREFERENCE_FILTER_AURORA_ONLY
+import com.aurora.store.util.Preferences.PREFERENCE_FILTER_FDROID
+import com.aurora.store.util.Preferences.PREFERENCE_FOR_YOU
+import com.aurora.store.util.Preferences.PREFERENCE_INSTALLER_ID
 import com.aurora.store.util.Preferences.PREFERENCE_INTRO
 import com.aurora.store.util.Preferences.PREFERENCE_MICROG_AUTH
+import com.aurora.store.util.Preferences.PREFERENCE_THEME_STYLE
+import com.aurora.store.util.Preferences.PREFERENCE_UPDATES_CHECK_INTERVAL
+import com.aurora.store.util.Preferences.PREFERENCE_UPDATES_EXTENDED
+import com.aurora.store.util.Preferences.PREFERENCE_VENDING_VERSION
+import com.aurora.store.util.save
 import com.aurora.store.view.ui.commons.BaseFragment
 import com.aurora.store.view.ui.sheets.PasscodeDialogSheet
 import com.aurora.store.viewmodel.auth.AuthViewModel
@@ -59,11 +72,11 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Skip onboarding - go straight to login (permissions pre-granted)
         if (!Preferences.getBoolean(requireContext(), PREFERENCE_INTRO)) {
-            findNavController().navigate(
-                SplashFragmentDirections.actionSplashFragmentToOnboardingFragment()
-            )
-            return
+            Preferences.putBoolean(requireContext(), PREFERENCE_INTRO, true)
+            // Load default preferences that would normally be set by onboarding
+            loadDefaultPreferences()
         }
 
         // Check if whitelist contains only external apps (no Play Store apps)
@@ -86,8 +99,6 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
                     R.id.menu_settings -> {
                         findNavController().navigate(R.id.settingsFragment)
                     }
-
-                    R.id.menu_about -> requireContext().navigate(Screen.About)
                 }
                 true
             }
@@ -221,5 +232,37 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
     private fun handleWhitelistAccess() {
         // Whitelist management is no longer available to users
         // Whitelist is now automatically managed via remote URL
+    }
+
+    private fun loadDefaultPreferences() {
+        // Only load once
+        if (Preferences.getBoolean(requireContext(), PREFERENCE_DEFAULT)) return
+        save(PREFERENCE_DEFAULT, true)
+
+        // Filters
+        save(PREFERENCE_FILTER_AURORA_ONLY, false)
+        save(PREFERENCE_FILTER_FDROID, true)
+
+        // Network
+        save(PREFERENCE_DISPENSER_URLS, setOf(Constants.URL_DISPENSER))
+        save(PREFERENCE_VENDING_VERSION, 0)
+
+        // Customization
+        save(PREFERENCE_THEME_STYLE, 0)
+        save(PREFERENCE_DEFAULT_SELECTED_TAB, 0)
+        save(PREFERENCE_FOR_YOU, true)
+
+        // Installer - use ROOT if available, otherwise SESSION
+        save(PREFERENCE_AUTO_DELETE, true)
+        val installerId = if (AppInstaller.hasRootAccess()) {
+            Installer.ROOT.ordinal
+        } else {
+            Installer.SESSION.ordinal
+        }
+        save(PREFERENCE_INSTALLER_ID, installerId)
+
+        // Updates
+        save(PREFERENCE_UPDATES_EXTENDED, false)
+        save(PREFERENCE_UPDATES_CHECK_INTERVAL, 3)
     }
 }

@@ -99,9 +99,10 @@ AuroraStore - Whitelist Edition is a specialized Aurora Store fork that displays
 ## Development Notes
 
 ### Whitelist Configuration
-- Default remote URL: `https://api.github.com/repos/alltechdev/alltech.dev/contents/whitelist.json?ref=main`
+- Default remote URL: `https://kosherwaze.com/whitelist.json`
 - Configure via `PREFERENCE_REMOTE_WHITELIST_URL` preference
 - Update `RemoteWhitelistProvider.kt` to change default URL
+- Also supports GitHub API URLs (base64-decoded content)
 
 ### Whitelist JSON Formats
 ```json

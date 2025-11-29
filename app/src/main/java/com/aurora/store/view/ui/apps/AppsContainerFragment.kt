@@ -38,7 +38,6 @@ import com.aurora.store.data.providers.PermissionProvider.Companion.isGranted
 import com.aurora.store.data.room.download.Download
 import com.aurora.store.data.room.update.Update
 import com.aurora.store.databinding.FragmentUpdatesBinding
-import com.aurora.store.data.installer.AppInstaller
 import com.aurora.store.util.PackageUtil
 import com.aurora.store.view.epoxy.views.app.AppUpdateViewModel_
 import com.aurora.store.view.epoxy.views.app.NoAppViewModel_
@@ -78,10 +77,6 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
             inflateMenu(R.menu.menu_main)
             setOnMenuItemClickListener {
                 when (it.itemId) {
-                    R.id.menu_search -> {
-                        toggleSearch()
-                        true
-                    }
                     R.id.menu_more -> {
                         findNavController().navigate(
                             MobileNavigationDirections.actionGlobalMoreDialogFragment()
@@ -92,19 +87,6 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
                 }
             }
         }
-
-        // Search input listener
-        binding.searchInput.setOnEditorActionListener { _, _, _ ->
-            viewModel.setSearchQuery(binding.searchInput.text.toString())
-            true
-        }
-        binding.searchInput.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.setSearchQuery(s.toString())
-            }
-            override fun afterTextChanged(s: android.text.Editable?) {}
-        })
 
         // Observe whitelist apps combined with download status and auth requirement
         viewLifecycleOwner.lifecycleScope.launch {
@@ -227,47 +209,56 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
                         .message(R.string.no_apps_available)
                 )
             } else {
-                // Display apps grouped by category
-                categorizedApps.forEach { (category, apps) ->
-                    // Add category header (only if there are multiple categories)
-                    if (categorizedApps.size > 1) {
-                        add(
-                            com.aurora.store.view.epoxy.views.HeaderViewModel_()
-                                .id("category_$category")
-                                .title(category)
-                        )
-                    }
+                // Filter out installed apps - they should only appear in Updates tab
+                val filteredCategorizedApps = categorizedApps.mapValues { (_, apps) ->
+                    apps.filter { app -> !PackageUtil.isInstalled(requireContext(), app.packageName) }
+                }.filterValues { it.isNotEmpty() }
 
-                    // Add apps in this category
-                    apps.forEach { app ->
-                        val download = downloads.find { it.packageName == app.packageName }
-                        val isInstalled = PackageUtil.isInstalled(requireContext(), app.packageName)
+                if (filteredCategorizedApps.isEmpty()) {
+                    // All apps are installed - show appropriate message
+                    add(
+                        NoAppViewModel_()
+                            .id("all_installed")
+                            .icon(R.drawable.ic_apps)
+                            .message(R.string.all_apps_installed)
+                    )
+                } else {
+                    // Display apps grouped by category
+                    filteredCategorizedApps.forEach { (category, apps) ->
+                        // Add category header (only if there are multiple categories)
+                        if (filteredCategorizedApps.size > 1) {
+                            add(
+                                com.aurora.store.view.epoxy.views.HeaderViewModel_()
+                                    .id("category_$category")
+                                    .title(category)
+                            )
+                        }
 
-                        // Convert App to Update for display
-                        val update = Update.fromApp(requireContext(), app)
+                        // Add apps in this category (only non-installed apps)
+                        apps.forEach { app ->
+                            val download = downloads.find { it.packageName == app.packageName }
 
-                        // Use a unique ID that changes when install state changes
-                        // This forces Epoxy to rebuild the view when app is installed/uninstalled
-                        val modelId = "${app.packageName}_installed:${isInstalled}_download:${download?.downloadStatus?.name ?: "none"}"
+                            // Convert App to Update for display
+                            val update = Update.fromApp(requireContext(), app)
 
-                        Log.d("AppsContainerFragment", "Building model for ${app.packageName}: installed=$isInstalled, id=$modelId")
+                            // Use a unique ID that includes download status
+                            val modelId = "${app.packageName}_download:${download?.downloadStatus?.name ?: "none"}"
 
-                        add(
-                            AppUpdateViewModel_()
-                                .id(modelId)
-                                .update(update)
-                                .download(download)
-                                .buttonText(if (isInstalled) getString(R.string.action_uninstall) else getString(R.string.action_install))
-                                .positiveAction { _ ->
-                                    Log.d("AppsContainerFragment", "Positive action clicked for ${app.packageName}, isInstalled=$isInstalled")
-                                    if (isInstalled) {
-                                        uninstallApp(app)
-                                    } else {
+                            Log.d("AppsContainerFragment", "Building model for ${app.packageName}: id=$modelId")
+
+                            add(
+                                AppUpdateViewModel_()
+                                    .id(modelId)
+                                    .update(update)
+                                    .download(download)
+                                    .buttonText(getString(R.string.action_install))
+                                    .positiveAction { _ ->
+                                        Log.d("AppsContainerFragment", "Install clicked for ${app.packageName}")
                                         installApp(app)
                                     }
-                                }
-                                .negativeAction { _ -> cancelApp(app) }
-                        )
+                                    .negativeAction { _ -> cancelApp(app) }
+                            )
+                        }
                     }
                 }
             }
@@ -290,49 +281,6 @@ class AppsContainerFragment : BaseFragment<FragmentUpdatesBinding>() {
 
     private fun cancelApp(app: App) {
         viewModel.cancelDownload(app.packageName)
-    }
-
-    private fun uninstallApp(app: App) {
-        // Check if root is available first
-        if (isRootAvailable()) {
-            try {
-                val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm uninstall ${app.packageName}"))
-                process.waitFor()
-                return
-            } catch (e: Exception) {
-                // Root failed, fall through to user's selected installer method
-            }
-        }
-
-        // Fallback to user's selected installation method (session installer, root installer, etc.)
-        AppInstaller.uninstall(requireContext(), app.packageName)
-    }
-
-    private fun isRootAvailable(): Boolean {
-        return try {
-            val process = Runtime.getRuntime().exec("su")
-            process.outputStream.write("exit\n".toByteArray())
-            process.outputStream.flush()
-            process.waitFor() == 0
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    private fun toggleSearch() {
-        if (binding.searchContainer.visibility == View.VISIBLE) {
-            // Hide search
-            binding.searchContainer.visibility = View.GONE
-            binding.searchInput.text?.clear()
-            viewModel.setSearchQuery("")
-        } else {
-            // Show search
-            binding.searchContainer.visibility = View.VISIBLE
-            binding.searchInput.requestFocus()
-            // Show keyboard
-            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-            imm.showSoftInput(binding.searchInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
-        }
     }
 
     override fun onDestroyView() {
