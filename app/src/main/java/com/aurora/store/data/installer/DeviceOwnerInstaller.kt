@@ -71,8 +71,6 @@ class DeviceOwnerInstaller @Inject constructor(
         get() = enqueuedSessions.firstOrNull()?.last()?.sessionId
 
     private val packageInstaller = context.packageManager.packageInstaller
-    private val devicePolicyManager = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-    private val componentName = ComponentName(context, DeviceOwnerReceiver::class.java)
     private val enqueuedSessions = mutableListOf<MutableSet<SessionInfo>>()
 
     val callback = object : PackageInstaller.SessionCallback() {
@@ -144,7 +142,7 @@ class DeviceOwnerInstaller @Inject constructor(
     override fun install(download: Download) {
         super.install(download)
 
-        if (!isDeviceOwner()) {
+        if (!AppInstaller.isDeviceOwner(context)) {
             Log.e(TAG, "App is not device owner!")
             postError(
                 download.packageName,
@@ -188,15 +186,6 @@ class DeviceOwnerInstaller @Inject constructor(
 
             enqueuedSessions.add(sessionInfoSet)
             commitInstall(sessionInfoSet.first())
-        }
-    }
-
-    private fun isDeviceOwner(): Boolean {
-        return try {
-            devicePolicyManager.isDeviceOwnerApp(context.packageName)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking device owner status: ${e.message}")
-            false
         }
     }
 
@@ -278,13 +267,15 @@ class DeviceOwnerInstaller @Inject constructor(
 
     private fun commitSession(sessionInfo: SessionInfo) {
         try {
-            val session = packageInstaller.openSession(sessionInfo.sessionId)
-            session.commit(getCallBackIntent(sessionInfo)!!.intentSender)
-            session.close()
+            packageInstaller.openSession(sessionInfo.sessionId).use { session ->
+                getCallBackIntent(sessionInfo)?.intentSender?.let {
+                    session.commit(it)
+                } ?: Log.e(TAG, "Failed to create PendingIntent for session ${sessionInfo.sessionId}")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error committing session: ${e.message}")
-        } finally {
             removeFromInstallQueue(sessionInfo.packageName)
+            postError(sessionInfo.packageName, e.localizedMessage, e.stackTraceToString())
         }
     }
 
