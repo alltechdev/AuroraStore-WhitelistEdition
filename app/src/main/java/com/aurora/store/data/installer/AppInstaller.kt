@@ -33,6 +33,7 @@ import com.aurora.extensions.getUpdateOwnerPackageNameCompat
 import com.aurora.extensions.isOAndAbove
 import com.aurora.extensions.isPAndAbove
 import com.aurora.extensions.isSAndAbove
+import com.aurora.extensions.isTAndAbove
 import com.aurora.store.BuildConfig
 import com.aurora.store.data.installer.base.IInstaller
 import com.aurora.store.data.model.Installer
@@ -107,7 +108,6 @@ class AppInstaller @Inject constructor(
         fun removeDeviceOwner(context: Context): Boolean {
             return try {
                 val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                val componentName = ComponentName(context, DeviceOwnerReceiver::class.java)
                 
                 if (dpm.isDeviceOwnerApp(context.packageName)) {
                     dpm.clearDeviceOwnerApp(context.packageName)
@@ -176,7 +176,13 @@ class AppInstaller @Inject constructor(
                 val intent = Intent(android.app.admin.DeviceAdminReceiver.ACTION_DEVICE_ADMIN_ENABLED)
                 intent.setPackage(packageName)
                 
-                val receivers = pm.queryBroadcastReceivers(intent, PackageManager.GET_META_DATA)
+                val receivers = if (isTAndAbove) {
+                    pm.queryBroadcastReceivers(intent, PackageManager.ResolveInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
+                } else {
+                    @Suppress("DEPRECATION")
+                    pm.queryBroadcastReceivers(intent, PackageManager.GET_META_DATA)
+                }
+                
                 if (receivers.isNotEmpty()) {
                     val receiverInfo = receivers[0].activityInfo
                     ComponentName(receiverInfo.packageName, receiverInfo.name)
