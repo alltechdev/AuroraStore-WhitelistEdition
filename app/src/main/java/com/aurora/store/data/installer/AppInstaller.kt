@@ -20,11 +20,14 @@
 
 package com.aurora.store.data.installer
 
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.core.content.pm.PackageInfoCompat
 import com.aurora.extensions.getUpdateOwnerPackageNameCompat
 import com.aurora.extensions.isOAndAbove
@@ -34,6 +37,7 @@ import com.aurora.store.BuildConfig
 import com.aurora.store.data.installer.base.IInstaller
 import com.aurora.store.data.model.Installer
 import com.aurora.store.data.model.InstallerInfo
+import com.aurora.store.data.receiver.DeviceOwnerReceiver
 import com.aurora.store.util.PackageUtil
 import com.aurora.store.util.Preferences
 import com.aurora.store.util.Preferences.PREFERENCE_INSTALLER_ID
@@ -52,10 +56,13 @@ class AppInstaller @Inject constructor(
     private val rootInstaller: RootInstaller,
     private val serviceInstaller: ServiceInstaller,
     private val amInstaller: AMInstaller,
-    private val shizukuInstaller: ShizukuInstaller
+    private val shizukuInstaller: ShizukuInstaller,
+    private val deviceOwnerInstaller: DeviceOwnerInstaller
 ) {
 
     companion object {
+        private const val TAG = "AppInstaller"
+        
         const val ACTION_INSTALL_STATUS = "com.aurora.store.data.installer.AppInstaller.INSTALL_STATUS"
 
         const val EXTRA_PACKAGE_NAME = "com.aurora.store.data.installer.AppInstaller.EXTRA_PACKAGE_NAME"
@@ -73,8 +80,113 @@ class AppInstaller @Inject constructor(
                 if (hasRootAccess()) RootInstaller.installerInfo else null,
                 if (hasAuroraService(context)) ServiceInstaller.installerInfo else null,
                 if (hasAppManager(context)) AMInstaller.installerInfo else null,
-                if (hasShizukuOrSui(context)) ShizukuInstaller.installerInfo else null
+                if (hasShizukuOrSui(context)) ShizukuInstaller.installerInfo else null,
+                if (isDeviceOwner(context)) DeviceOwnerInstaller.installerInfo else null
             )
+        }
+
+        /**
+         * Checks if the app is set as device owner
+         * @param context [Context]
+         */
+        fun isDeviceOwner(context: Context): Boolean {
+            return try {
+                val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                dpm.isDeviceOwnerApp(context.packageName)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking device owner status: ${e.message}")
+                false
+            }
+        }
+
+        /**
+         * Removes device owner status from the app
+         * @param context [Context]
+         * @return true if successfully removed, false otherwise
+         */
+        fun removeDeviceOwner(context: Context): Boolean {
+            return try {
+                val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                val componentName = ComponentName(context, DeviceOwnerReceiver::class.java)
+                
+                if (dpm.isDeviceOwnerApp(context.packageName)) {
+                    dpm.clearDeviceOwnerApp(context.packageName)
+                    Log.i(TAG, "Device owner removed successfully")
+                    true
+                } else {
+                    Log.w(TAG, "App is not device owner")
+                    false
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to remove device owner: ${e.message}")
+                false
+            }
+        }
+
+        /**
+         * Transfers device owner to another app
+         * @param context [Context]
+         * @param targetPackageName Package name of the app to transfer ownership to
+         * @return true if transfer initiated successfully, false otherwise
+         */
+        fun transferDeviceOwner(context: Context, targetPackageName: String): Boolean {
+            return try {
+                val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                val sourceAdmin = ComponentName(context, DeviceOwnerReceiver::class.java)
+                
+                if (!dpm.isDeviceOwnerApp(context.packageName)) {
+                    Log.e(TAG, "App is not device owner")
+                    return false
+                }
+
+                // Verify target app is installed
+                if (!PackageUtil.isInstalled(context, targetPackageName)) {
+                    Log.e(TAG, "Target app not installed: $targetPackageName")
+                    return false
+                }
+
+                // Get target app's DeviceAdminReceiver component
+                val targetAdmin = getDeviceAdminComponent(context, targetPackageName)
+                if (targetAdmin == null) {
+                    Log.e(TAG, "Target app does not have a DeviceAdminReceiver")
+                    return false
+                }
+
+                // Initiate transfer (available from Android P / API 28+)
+                if (isPAndAbove) {
+                    dpm.transferOwnership(sourceAdmin, targetAdmin, null)
+                    Log.i(TAG, "Device owner transfer initiated to $targetPackageName")
+                    true
+                } else {
+                    Log.e(TAG, "Device owner transfer requires Android 9+")
+                    false
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to transfer device owner: ${e.message}")
+                false
+            }
+        }
+
+        /**
+         * Finds the DeviceAdminReceiver component in the target package
+         */
+        private fun getDeviceAdminComponent(context: Context, packageName: String): ComponentName? {
+            return try {
+                val pm = context.packageManager
+                val intent = Intent(android.app.admin.DeviceAdminReceiver.ACTION_DEVICE_ADMIN_ENABLED)
+                intent.setPackage(packageName)
+                
+                val receivers = pm.queryBroadcastReceivers(intent, PackageManager.GET_META_DATA)
+                if (receivers.isNotEmpty()) {
+                    val receiverInfo = receivers[0].activityInfo
+                    ComponentName(receiverInfo.packageName, receiverInfo.name)
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error finding DeviceAdminReceiver: ${e.message}")
+                null
+            }
         }
 
         /**
@@ -106,6 +218,7 @@ class AppInstaller @Inject constructor(
                 Installer.SERVICE -> hasAuroraService(context)
                 Installer.AM -> false // We cannot check if AppManager has ability to auto-update
                 Installer.SHIZUKU -> isOAndAbove && hasShizukuOrSui(context) && hasShizukuPerm()
+                Installer.DEVICE_OWNER -> isDeviceOwner(context)
             }
         }
 
@@ -172,6 +285,13 @@ class AppInstaller @Inject constructor(
             Installer.SHIZUKU -> {
                 if (hasShizukuOrSui(context) && hasShizukuPerm()) {
                     shizukuInstaller
+                } else {
+                    defaultInstaller
+                }
+            }
+            Installer.DEVICE_OWNER -> {
+                if (isDeviceOwner(context)) {
+                    deviceOwnerInstaller
                 } else {
                     defaultInstaller
                 }
