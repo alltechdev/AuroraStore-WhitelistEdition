@@ -103,7 +103,7 @@
     <string name="action_update">"Update"</string>
     <string name="action_update_all">"Update all"</string>
     <string name="details_beta">"Beta program"</string>
-    <string name="details_beta_subscribed">"You're a beta tester"</string>
+    <string name="details_beta_subscribed">"You\'re a beta tester"</string>
     <string name="details_beta_available">"Join beta program?"</string>
     <string name="details_beta_description">"You will see new features and bugs before the public does. Give your feedback to developers to help them improve."</string>
     <string name="details_beta_delay">"Enrollment may take some time, you can check status later."</string>
@@ -151,8 +151,8 @@
     <string name="download_metadata">"Getting metadata"</string>
     <string name="download_none">"No downloads"</string>
     <string name="download_pause_all">"Pause all"</string>
-    <string name="download_paused">"Paused • <xliff:g id="completed_downloads">%1$d</xliff:g> / <xliff:g id="all_downloads">%2$d</xliff:g>"</string>
-    <string name="download_progress">"Downloading • <xliff:g id="completed_downloads">%1$d</xliff:g> / <xliff:g id="all_downloads">%2$d</xliff:g> • <xliff:g id="speed">%3$s</xliff:g>"</string>
+    <string name="download_paused">"Paused • <xliff:g id=\"completed_downloads\">%1$d</xliff:g> / <xliff:g id=\"all_downloads\">%2$d</xliff:g>"</string>
+    <string name="download_progress">"Downloading • <xliff:g id=\"completed_downloads\">%1$d</xliff:g> / <xliff:g id=\"all_downloads\">%2$d</xliff:g> • <xliff:g id=\"speed\">%3$s</xliff:g>"</string>
     <string name="download_queued">"Queued"</string>
     <string name="download_resume_all">"Resume all"</string>
     <string name="download_speed_estimating">"Estimating"</string>
@@ -161,7 +161,7 @@
     <string name="exodus_powered">"Powered by Exodus Privacy"</string>
     <string name="exodus_progress">"Checking for trackers…"</string>
     <string name="exodus_substring">known trackers(s) found in</string>
-    <string name="exodus_report_trackers"><xliff:g id="number_of_trackers">%1$d</xliff:g> known trackers(s) found in <xliff:g id="app_version_name">%2$s</xliff:g></string>
+    <string name="exodus_report_trackers"><xliff:g id=\"number_of_trackers\">%1$d</xliff:g> known trackers(s) found in <xliff:g id=\"app_version_name\">%2$s</xliff:g></string>
     <string name="exodus_view_report">"View report"</string>
     <string name="filter_review_all">"All"</string>
     <string name="filter_latest">"Latest"</string>
@@ -201,7 +201,7 @@
     <string name="notification_channel_install">Install notification</string>
     <string name="notification_channel_downloads">Downloads notification</string>
     <string name="pref_common_extra">"Extras"</string>
-    <string name="pref_filter_fdroid_summary">"Don't check updates for apps installed from F-Droid"</string>
+    <string name="pref_filter_fdroid_summary">"Don\'t check updates for apps installed from F-Droid"</string>
     <string name="pref_filter_fdroid_title">"Filter F-Droid apps"</string>
     <string name="pref_install_delete_summary">Downloaded APKs will be deleted immediately after installation</string>
     <string name="pref_install_delete_title">"Delete APK post-install"</string>
@@ -211,6 +211,7 @@
     <string name="pref_install_mode_root">"Root installer"</string>
     <string name="pref_install_mode_services">"Aurora Services (Deprecated)"</string>
     <string name="pref_install_mode_session">"Session installer"</string>
+    <string name="pref_install_mode_device_owner">"Device Owner"</string>
     <string name="pref_install_mode_summary">"Select mode of APK installation"</string>
     <string name="pref_install_mode_title">"Installation method"</string>
     <string name="pref_vending_version_title">Google Play version</string>
@@ -247,7 +248,7 @@
     <string name="spoof_apply">"Make sure you re-login to apply the spoof"</string>
     <string name="insecure_anonymous_apply">"Make sure you re-login and restart app to apply changes."</string>
     <string name="tab_categories">"Categories"</string>
-    <string name="tab_editor_choice">"Editor's choice"</string>
+    <string name="tab_editor_choice">"Editor\'s choice"</string>
     <string name="tab_for_you">"For you"</string>
     <string name="tab_top_charts">"Top charts"</string>
     <string name="tab_top_free">"Top free"</string>
@@ -309,21 +310,21 @@
     <string name="error">An error occurred!</string>
     <string name="menu">Menu</string>
     <string name="expand">Expand</string>
-    <string name="spoof_property"><xliff:g id="manufacturer">%1$s</xliff:g> • API <xliff:g id="api">%2$s</xliff:g></string>
+    <string name="spoof_property"><xliff:g id=\"manufacturer\">%1$s</xliff:g> • API <xliff:g id=\"api\">%2$s</xliff:g></string>
     <string name="item_required">Required</string>
     <string name="item_optional">Optional</string>
     <string name="permissions_denied">Required permissions were denied. Please grant them in order to continue the action</string>
     <string name="search_hint">Search for apps &amp; games</string>
     <string name="requesting_new_session">Requesting new session</string>
     <string name="server_maintenance">Server down for maintenance</string>
-    <string name="downloading_dep">Downloading additional files for <xliff:g id="app">%1$s</xliff:g></string>
+    <string name="downloading_dep">Downloading additional files for <xliff:g id=\"app\">%1$s</xliff:g></string>
     <string name="notification_channel_updates">Update notifications</string>
-    <string name="notification_updates_available"><xliff:g id="apps_count">%1$d</xliff:g> updates available</string>
-    <string name="notification_updates_available_1"><xliff:g id="apps_count">%1$d</xliff:g> update available</string>
-    <string name="notification_updates_available_desc_1">A new version of <xliff:g id="app_one_name">%1$s</xliff:g> is available</string>
-    <string name="notification_updates_available_desc_2"><xliff:g id="app_one_name">%1$s</xliff:g> and <xliff:g id="app_two_name">%2$s</xliff:g></string>
-    <string name="notification_updates_available_desc_3"><xliff:g id="app_one_name">%1$s</xliff:g>, <xliff:g id="app_two_name">%2$s</xliff:g> and <xliff:g id="app_three_name">%3$s</xliff:g></string>
-    <string name="notification_updates_available_desc_4"><xliff:g id="app_one_name">%1$s</xliff:g>, <xliff:g id="app_two_name">%2$s</xliff:g>, <xliff:g id="app_three_name">%3$s</xliff:g> and <xliff:g id="apps_count">%4$d</xliff:g> more</string>
+    <string name="notification_updates_available"><xliff:g id=\"apps_count\">%1$d</xliff:g> updates available</string>
+    <string name="notification_updates_available_1"><xliff:g id=\"apps_count\">%1$d</xliff:g> update available</string>
+    <string name="notification_updates_available_desc_1">A new version of <xliff:g id=\"app_one_name\">%1$s</xliff:g> is available</string>
+    <string name="notification_updates_available_desc_2"><xliff:g id=\"app_one_name\">%1$s</xliff:g> and <xliff:g id=\"app_two_name\">%2$s</xliff:g></string>
+    <string name="notification_updates_available_desc_3"><xliff:g id=\"app_one_name\">%1$s</xliff:g>, <xliff:g id=\"app_two_name\">%2$s</xliff:g> and <xliff:g id=\"app_three_name\">%3$s</xliff:g></string>
+    <string name="notification_updates_available_desc_4"><xliff:g id=\"app_one_name\">%1$s</xliff:g>, <xliff:g id=\"app_two_name\">%2$s</xliff:g>, <xliff:g id=\"app_three_name\">%3$s</xliff:g> and <xliff:g id=\"apps_count\">%4$d</xliff:g> more</string>
     <string name="pref_updates_auto">Automatic updates</string>
     <string name="pref_updates_auto_desc">Configure automatic updates behaviour</string>
     <string name="pref_updates_auto_off">Do not auto-update apps</string>
@@ -338,7 +339,7 @@
     <string name="server_unreachable">Server unreachable</string>
     <string name="failed_to_generate_session">Could not generate session</string>
     <string name="verifying_new_session">Verifying new session</string>
-    <string name="failed_generating_session">Failed to generate session, error code: <xliff:g id="status_code">%1$d</xliff:g></string>
+    <string name="failed_generating_session">Failed to generate session, error code: <xliff:g id=\"status_code\">%1$d</xliff:g></string>
     <string name="check_connectivity">Check internet connectivity</string>
     <string name="app_language">App language</string>
     <string name="pref_ui_layout">Layout</string>
@@ -375,7 +376,7 @@
     <string name="onboarding_permission_doze_desc">"Allow Aurora Store to download and update apps in background"</string>
     <string name="onboarding_permission_select">"Aurora Store requires following permissions"</string>
     <string name="onboarding_gms_agreement">"I have read and agree to the microG Terms of Service and Privacy Policy"</string>
-    <string name="onboarding_gms_missing">"We couldn't find Google Play Services on your device, several popular apps now require it to function properly!"</string>
+    <string name="onboarding_gms_missing">"We couldn\'t find Google Play Services on your device, several popular apps now require it to function properly!"</string>
     <string name="onboarding_gms_microg">"microG is a free and open-source implementation that provides similar functionality to run apps dependent on Google Play Services for Android devices through re-implementation.\n\nmicroG enables apps to access those Google APIs, enhancing compatibility for users while offering privacy benefits. \n\nmicroG will run automatically in the background when you open applications dependent on Google Mobile Services."</string>
     <string name="microg_privacy_policy">Read microG Privacy Policy</string>
     <string name="microg_license_agreement">Read microG License and Agreement</string>
@@ -394,6 +395,8 @@
     <string name="am_installer_desc">Requires App Manager, need adb/root mode to install when miui optimization is on</string>
     <string name="shizuku_installer_subtitle">Using system APIs directly with adb/root privileges</string>
     <string name="shizuku_installer_desc">Requires Shizuku or Sui, needs to be setup and permission granted</string>
+    <string name="device_owner_installer_subtitle">Silent installation with device owner privileges</string>
+    <string name="device_owner_installer_desc">Uses Device Owner permissions for completely silent app installation without any user interaction. Requires the app to be set as device owner.</string>
 
     <!-- ManualDownloadSheet -->
     <string name="manual_download_hint">Enter version code you wish to download</string>
@@ -411,7 +414,7 @@
 
     <!-- AboutFragment -->
     <string name="made_with_love">Forked from Aurora Store by @ars18-JTechForums</string>
-    <string name="version" translatable="false">v<xliff:g id="version_name">%1$s</xliff:g> (<xliff:g id="version_code">%2$d</xliff:g>)</string>
+    <string name="version" translatable="false">v<xliff:g id=\"version_name\">%1$s</xliff:g> (<xliff:g id=\"version_code\">%2$d</xliff:g>)</string>
     <string name="about_aurora_store_title">About Aurora Updater</string>
     <string name="about_aurora_store_subtitle">Learn more about Aurora Updater</string>
     <string name="about_aurora_store_summary">Aurora Updater is a simplified fork of Aurora Store focused solely on updating your existing apps. It provides a clean interface to view and manage app updates without the ability to browse or download new applications.\n\nForked from Aurora Store by @ars18-JTechForums.\n\nAurora Updater enables you to update apps from Google Play using anonymous authentication. Unlike the original Aurora Store, this version removes all browsing functionality and focuses purely on keeping your installed apps up to date.\n\nPlease note that Aurora Updater does not have any approval, sponsorship or authorization from Google, Google Play, any apps updated through Aurora Updater or any app developers; neither does Aurora Updater have any affiliation, cooperation or connection with them.</string>
@@ -444,7 +447,7 @@
     <string name="add_dispenser_error">Invalid URL</string>
     <string name="add_dispenser_hint">Dispenser URL</string>
     <string name="remove_dispenser_title">Remove dispenser</string>
-    <string name="remove_dispenser_summary">Do you wish to remove the dispenser \"<xliff:g id="url">%1$s</xliff:g>\"?</string>
+    <string name="remove_dispenser_summary">Do you wish to remove the dispenser \"<xliff:g id=\"url\">%1$s</xliff:g>\"?</string>
     <string name="add">Add</string>
     <string name="remove">Remove</string>
 
@@ -497,21 +500,21 @@
 
     <!-- AppDetailsFragment -->
     <string name="no_description">No description available</string>
-    <string name="permissions_requested"><xliff:g id="number_of_permissions">%1$d</xliff:g> permissions</string>
+    <string name="permissions_requested"><xliff:g id=\"number_of_permissions\">%1$d</xliff:g> permissions</string>
     <string name="details_more_info">More info</string>
     <string name="details_more_target_api">Targets</string>
     <string name="details_more_package_name">Package name</string>
     <string name="details_more_content_rating">Content rating</string>
     <string name="action_unarchive">Unarchive</string>
     <string name="unable_to_open">Unable to open app</string>
-    <string name="version_update" translatable="false"><xliff:g id="installed_version_name">%1$s</xliff:g> (<xliff:g id="installed_version_code">%2$d</xliff:g>) ➔ <xliff:g id="update_version_name">%3$s</xliff:g> (<xliff:g id="update_version_code">%4$d</xliff:g>)</string>
+    <string name="version_update" translatable="false"><xliff:g id=\"installed_version_name\">%1$s</xliff:g> (<xliff:g id=\"installed_version_code\">%2$d</xliff:g>) ➔ <xliff:g id=\"update_version_name\">%3$s</xliff:g> (<xliff:g id=\"update_version_code\">%4$d</xliff:g>)</string>
     <string name="plexus_powered">Powered by Plexus</string>
     <string name="plexus_progress">Checking compatibility…</string>
     <string name="details_compatibility_title">Compatibility</string>
     <string name="details_compatibility_gms_required_title">Requires Google Play Services</string>
-    <string name="details_compatibility_gms_required_subtitle">You may need to install Google’s proprietary library or a FOSS reimplementation such as microG.</string>
+    <string name="details_compatibility_gms_required_subtitle">You may need to install Google\'s proprietary library or a FOSS reimplementation such as microG.</string>
     <string name="details_compatibility_gms_not_required_title">Works without Google Play Services</string>
-    <string name="details_compatibility_gms_not_required_subtitle">This app works without Google’s proprietary library. However, it may still require other third-party libraries to work properly.</string>
+    <string name="details_compatibility_gms_not_required_subtitle">This app works without Google\'s proprietary library. However, it may still require other third-party libraries to work properly.</string>
     <string name="details_compatibility_microg">With microG Project</string>
     <string name="details_compatibility_no_gms">Without Google Play Services</string>
     <string name="details_compatibility_status_compatible">Compatible: Works without any issues</string>
@@ -521,7 +524,7 @@
     <string name="preparing_to_install">Preparing to install</string>
 
     <!-- AppsGamesFragment -->
-    <string name="installed_apps_size"><xliff:g id="installed_apps_size">%1$d</xliff:g> apps installed</string>
+    <string name="installed_apps_size"><xliff:g id=\"installed_apps_size\">%1$d</xliff:g> apps installed</string>
 
     <!-- NetworkPreference -->
     <string name="pref_network_microg_login_title">Use microG to sign in to accounts</string>
@@ -548,6 +551,18 @@
     <string name="select_app_for_details">Select an app for more details</string>
     <string name="action_filter_no_ads">No advertisements</string>
     <string name="action_filter_no_gms">No play services</string>
-    
+
+    <!-- Device Owner Management -->
+    <string name="device_owner_management">Device Owner Management</string>
+    <string name="device_owner_management_desc">Manage device owner permissions for this app</string>
+    <string name="remove_device_owner">Remove Device Owner</string>
+    <string name="transfer_device_owner">Transfer Device Owner</string>
+    <string name="transfer_device_owner_desc">Transfer device owner to another app. Enter the package name of the target app that has a DeviceAdminReceiver component.</string>
+    <string name="target_package_name">Target Package Name</string>
+    <string name="transfer">Transfer</string>
+    <string name="device_owner_removed_success">Device owner removed successfully</string>
+    <string name="device_owner_removed_failed">Failed to remove device owner</string>
+    <string name="device_owner_transfer_success">Device owner transfer initiated</string>
+    <string name="device_owner_transfer_failed">Failed to transfer device owner. Make sure the target app has a DeviceAdminReceiver.</string>
 
 </resources>
