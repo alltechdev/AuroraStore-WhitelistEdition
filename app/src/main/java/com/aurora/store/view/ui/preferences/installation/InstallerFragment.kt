@@ -207,6 +207,21 @@ class InstallerFragment : BaseFragment<FragmentInstallerBinding>() {
                 }
             }
 
+            6 -> {
+                if (AppInstaller.hasDeviceOwner(requireContext())) {
+                    this.installerId = installerId
+                    save(PREFERENCE_INSTALLER_ID, installerId)
+                } else {
+                    this.installerId = 0
+                    save(PREFERENCE_INSTALLER_ID, 0)
+                    binding.epoxyRecycler.requestModelBuild()
+                    showDialog(
+                        R.string.action_installations,
+                        R.string.installer_device_owner_unavailable
+                    )
+                }
+            }
+
             else -> {
                 this.installerId = installerId
                 save(PREFERENCE_INSTALLER_ID, installerId)

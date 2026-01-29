@@ -30,8 +30,10 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.aurora.extensions.showDialog
 import com.aurora.store.R
+import com.aurora.store.util.Preferences
 import com.aurora.store.util.Preferences.PREFERENCE_INSTALLATION_DEVICE_OWNER
 import com.aurora.store.util.Preferences.PREFERENCE_INSTALLER_ID
+import com.aurora.store.util.save
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -59,6 +61,10 @@ class InstallationPreference : PreferenceFragmentCompat() {
                     { _: DialogInterface, _: Int ->
                         @Suppress("DEPRECATION")
                         devicePolicyManager!!.clearDeviceOwnerApp(packageName)
+                        // Reset installer to Session if Device Owner was selected
+                        if (Preferences.getInteger(context, PREFERENCE_INSTALLER_ID) == 6) {
+                            save(PREFERENCE_INSTALLER_ID, 0)
+                        }
                         activity?.recreate()
                     },
                     { dialog: DialogInterface, _: Int -> dialog.dismiss() }
