@@ -16,6 +16,8 @@ import com.aurora.store.AuroraApp
 import com.aurora.store.data.event.BusEvent
 import com.aurora.store.data.event.InstallerEvent
 import com.aurora.store.data.model.UpdateMode
+import com.aurora.store.data.room.update.DismissedUpdate
+import com.aurora.store.data.room.update.DismissedUpdateDao
 import com.aurora.store.data.room.update.UpdateDao
 import com.aurora.store.data.work.UpdateWorker
 import com.aurora.store.util.Preferences
@@ -25,6 +27,7 @@ import com.aurora.store.util.Preferences.PREFERENCES_UPDATES_RESTRICTIONS_METERE
 import com.aurora.store.util.Preferences.PREFERENCE_UPDATES_CHECK_INTERVAL
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -41,6 +44,7 @@ import javax.inject.Inject
  */
 class UpdateHelper @Inject constructor(
     private val updateDao: UpdateDao,
+    private val dismissedUpdateDao: DismissedUpdateDao,
     @ApplicationContext private val context: Context,
     private val whitelistProvider: com.aurora.store.data.providers.WhitelistProvider
 ) {
@@ -89,13 +93,17 @@ class UpdateHelper @Inject constructor(
         get() = Preferences.getBoolean(context, Preferences.PREFERENCE_UPDATES_EXTENDED)
 
     val updates = updateDao.updates()
-        .map { list ->
-            list.filter { update ->
+        .combine(dismissedUpdateDao.getAll()) { updateList, dismissedList ->
+            updateList.filter { update ->
                 // Filter by whitelist first - ONLY show whitelisted apps
                 val isWhitelisted = whitelistProvider.isWhitelisted(update.packageName)
                 // Then filter by cert if extended updates are disabled
                 val hasValidCert = if (!isExtendedUpdateEnabled) update.hasValidCert else true
-                isWhitelisted && hasValidCert
+                // Filter out dismissed updates
+                val isDismissed = dismissedList.any {
+                    it.packageName == update.packageName && it.versionCode == update.versionCode
+                }
+                isWhitelisted && hasValidCert && !isDismissed
             }
         }
         .stateIn(AuroraApp.scope, SharingStarted.WhileSubscribed(), null)
@@ -161,6 +169,16 @@ class UpdateHelper @Inject constructor(
      */
     suspend fun deleteAllUpdates() {
         updateDao.deleteAll()
+    }
+
+    /**
+     * Dismiss an update so it won't show again until a newer version is available
+     * @param packageName The package name
+     * @param versionCode The version code being dismissed
+     */
+    suspend fun dismissUpdate(packageName: String, versionCode: Long) {
+        Log.d(TAG, "Dismissing update: $packageName v$versionCode")
+        dismissedUpdateDao.insert(DismissedUpdate(packageName, versionCode))
     }
 
     /**

@@ -26,6 +26,10 @@ object MigrationHelper {
         override fun migrate(db: SupportSQLiteDatabase) = migrateFrom4To5(db)
     }
 
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) = migrateFrom5To6(db)
+    }
+
     private const val TAG = "MigrationHelper"
 
     private fun migrateFrom1To2(database: SupportSQLiteDatabase) {
@@ -79,6 +83,21 @@ object MigrationHelper {
             database.setTransactionSuccessful()
         } catch (exception: Exception) {
             Log.e(TAG, "Failed while migrating from database version 4 to 5", exception)
+        } finally {
+            database.endTransaction()
+        }
+    }
+
+    /**
+     * Add dismissed_update table for tracking updates that have been attempted/dismissed.
+     */
+    private fun migrateFrom5To6(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        try {
+            database.execSQL("CREATE TABLE `dismissed_update` (`packageName` TEXT NOT NULL, `versionCode` INTEGER NOT NULL, `dismissedAt` INTEGER NOT NULL, PRIMARY KEY(`packageName`, `versionCode`))")
+            database.setTransactionSuccessful()
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed while migrating from database version 5 to 6", exception)
         } finally {
             database.endTransaction()
         }

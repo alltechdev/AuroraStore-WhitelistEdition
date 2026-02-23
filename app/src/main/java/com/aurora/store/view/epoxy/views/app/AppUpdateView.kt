@@ -76,7 +76,7 @@ class AppUpdateView @JvmOverloads constructor(
 
             binding.txtLine2.text = developerName
             binding.txtLine3.text = ("${CommonUtil.addSiPrefix(size)}  •  $updatedOn")
-            binding.txtLine4.text = ("$versionName (${versionCode})")
+            binding.txtLine4.text = versionName
             binding.txtChangelog.text = if (changelog.isNotEmpty())
                 HtmlCompat.fromHtml(
                     changelog,

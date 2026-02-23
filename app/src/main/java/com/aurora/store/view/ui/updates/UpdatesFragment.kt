@@ -142,33 +142,6 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
                             .actionCallback { _ -> viewModel.fetchUpdates() }
                     )
                 } else {
-                    add(
-                        UpdateHeaderViewModel_()
-                            .id("header_all")
-                            .title(
-                                "${appList.size} " +
-                                        if (appList.size == 1)
-                                            getString(R.string.update_available)
-                                        else
-                                            getString(R.string.updates_available)
-                            )
-                            .action(
-                                if (viewModel.updateAllEnqueued) {
-                                    getString(R.string.action_cancel)
-                                } else {
-                                    getString(R.string.action_update_all)
-                                }
-                            )
-                            .click { _ ->
-                                if (viewModel.updateAllEnqueued) {
-                                    cancelAll()
-                                } else {
-                                    updateAll()
-                                }
-                                requestModelBuild()
-                            }
-                    )
-
                     for ((update, download) in appList) {
                         add(
                             AppUpdateViewModel_()
@@ -190,6 +163,7 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
     }
 
     private fun updateSingle(update: Update) {
+        android.util.Log.d("UpdatesFragment", "updateSingle clicked for ${update.packageName}, versionCode=${update.versionCode}, fileList=${update.fileList.size}")
         if (update.fileList.requiresObbDir()) {
             if (isGranted(requireContext(), PermissionType.STORAGE_MANAGER)) {
                 viewModel.download(update)

@@ -74,6 +74,7 @@
         android:layout_alignEnd="@id/txt_line1"
         android:ellipsize="end"
         android:singleLine="true"
+        android:visibility="gone"
         android:textAppearance="@style/TextAppearance.Aurora.Line3" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -85,15 +86,16 @@
         android:layout_alignEnd="@id/txt_line1"
         android:ellipsize="end"
         android:singleLine="true"
+        android:visibility="gone"
         android:textAppearance="@style/TextAppearance.Aurora.Line3" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/txt_line4"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/txt_line3"
+        android:layout_below="@+id/txt_line1"
         android:layout_alignStart="@+id/txt_line1"
-        android:layout_alignEnd="@id/txt_line1"
+        android:layout_alignEnd="@id/btn_action"
         android:ellipsize="end"
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.Aurora.Line3" />
@@ -106,6 +108,7 @@
         android:layout_alignTop="@id/txt_line1"
         android:layout_toStartOf="@id/btn_action"
         android:contentDescription="@string/details_changelog"
+        android:visibility="gone"
         app:iconTint="?colorControlNormal"
         app:icon="@drawable/ic_arrow_down" />
 
@@ -117,6 +120,7 @@
         android:layout_alignParentEnd="true"
         android:gravity="center" />
 
+    <!-- Changelog card hidden for simplified view -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_changelog"
         style="@style/Widget.Material3.CardView.Filled"

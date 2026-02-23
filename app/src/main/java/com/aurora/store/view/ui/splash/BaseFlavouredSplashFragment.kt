@@ -79,14 +79,11 @@ abstract class BaseFlavouredSplashFragment : BaseFragment<FragmentSplashBinding>
             loadDefaultPreferences()
         }
 
-        // Check if whitelist contains only external apps (no Play Store apps)
-        // If true, navigate directly without authentication
-        if (whitelistProvider.hasOnlyExternalApps()) {
-            Log.d(TAG, "Only external apps detected, skipping authentication")
-            updateStatus(getString(R.string.external_apps_only_mode))
-            navigateToDefaultTab()
-            return
-        }
+        // External apps only mode - skip authentication entirely
+        Log.d(TAG, "External apps only mode, skipping authentication")
+        updateStatus(getString(R.string.external_apps_only_mode))
+        navigateToDefaultTab()
+        return
 
         // Toolbar
         binding.toolbar.apply {

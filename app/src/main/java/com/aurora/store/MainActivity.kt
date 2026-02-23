@@ -131,25 +131,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Handle views on fragments
-        navController.addOnDestinationChangedListener { _, navDestination, _ ->
-            if (navDestination !is FloatingWindow) {
-                when (navDestination.id) {
-                    in topLevelFrags -> B.navView.visibility = View.VISIBLE
-                    else -> B.navView.visibility = View.GONE
-                }
-            }
-        }
-
-        // Updates
-        lifecycleScope.launch {
-            viewModel.updateHelper.updates.collectLatest { list ->
-                B.navView.getOrCreateBadge(R.id.updatesFragment).apply {
-                    isVisible = !list.isNullOrEmpty()
-                    number = list?.size ?: 0
-                }
-            }
-        }
+        // Bottom nav always hidden - single tab mode
+        B.navView.visibility = View.GONE
     }
 
     private fun isIntroDone(): Boolean {
