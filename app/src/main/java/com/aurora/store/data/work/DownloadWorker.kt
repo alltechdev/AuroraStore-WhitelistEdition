@@ -218,7 +218,10 @@ class DownloadWorker @AssistedInject constructor(
                 prefs.edit().putLong("${download.packageName}_version", download.versionCode).apply()
                 Log.d(TAG, "Stored app version: ${download.packageName} = ${download.versionCode}")
 
-                appInstaller.getPreferredInstaller().install(download)
+                val installer = appInstaller.getPreferredInstaller()
+                Log.i(TAG, "Starting install for ${download.packageName} using ${installer.javaClass.simpleName}")
+                installer.install(download)
+                Log.i(TAG, "Install triggered for ${download.packageName}")
                 Result.success()
             } catch (exception: Exception) {
                 Log.e(TAG, "Failed to install ${download.packageName}", exception)

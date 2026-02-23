@@ -47,9 +47,13 @@ class UpdatesViewModel @Inject constructor(
 
     fun download(update: Update) {
         viewModelScope.launch {
-            // Dismiss the update so it won't show again (even if installation fails)
-            updateHelper.dismissUpdate(update.packageName, update.versionCode)
             downloadHelper.enqueueUpdate(update)
+        }
+    }
+
+    fun dismissUpdate(update: Update) {
+        viewModelScope.launch {
+            updateHelper.dismissUpdate(update.packageName, update.versionCode)
         }
     }
 

@@ -41,11 +41,13 @@ open class PackageManagerReceiver : BroadcastReceiver() {
     lateinit var appInstaller: AppInstaller
 
     override fun onReceive(context: Context, intent: Intent) {
+        Log.i(TAG, "PackageManagerReceiver.onReceive: action=${intent.action}, data=${intent.data}")
         if (intent.action != null && intent.data != null) {
             val packageName = intent.data!!.encodedSchemeSpecificPart
 
             when (intent.action) {
                 Intent.ACTION_PACKAGE_ADDED -> {
+                    Log.i(TAG, "Package installed: $packageName - sending InstallerEvent.Installed")
                     AuroraApp.events.send(InstallerEvent.Installed(packageName))
 
                     // Check if Aurora Store itself was updated

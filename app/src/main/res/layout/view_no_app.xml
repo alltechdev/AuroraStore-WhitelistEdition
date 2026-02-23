@@ -23,11 +23,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/txt_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="120dp"
+        android:gravity="center"
+        android:text="MJZ Updater"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="?colorOnSurface"
+        android:fontFamily="sans-serif-medium" />
+
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/img"
         android:layout_width="@dimen/icon_size"
         android:layout_height="@dimen/icon_size"
         android:layout_centerInParent="true"
+        android:visibility="gone"
         app:tint="?colorPrimary"
         tools:src="@drawable/ic_updates" />
 
@@ -41,15 +54,21 @@
         android:layout_marginHorizontal="@dimen/margin_xlarge"
         android:gravity="center"
         android:textAlignment="center"
+        android:visibility="gone"
         android:textAppearance="@style/TextAppearance.Aurora.Line1"
         tools:text="No updates available" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button"
-        android:layout_width="wrap_content"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/txt"
-        android:layout_centerInParent="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="@dimen/margin_normal"
+        android:layout_marginEnd="@dimen/margin_normal"
+        android:layout_marginBottom="@dimen/margin_normal"
+        android:backgroundTint="?colorSurfaceVariant"
+        android:textColor="?colorOnSurfaceVariant"
         android:visibility="gone"
         tools:text="@string/check_updates"
         tools:visibility="visible" />

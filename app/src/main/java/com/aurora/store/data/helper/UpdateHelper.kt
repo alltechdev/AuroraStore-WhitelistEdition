@@ -45,6 +45,7 @@ import javax.inject.Inject
 class UpdateHelper @Inject constructor(
     private val updateDao: UpdateDao,
     private val dismissedUpdateDao: DismissedUpdateDao,
+    private val downloadDao: com.aurora.store.data.room.download.DownloadDao,
     @ApplicationContext private val context: Context,
     private val whitelistProvider: com.aurora.store.data.providers.WhitelistProvider
 ) {
@@ -127,8 +128,24 @@ class UpdateHelper @Inject constructor(
     private fun observeUpdates() {
         AuroraApp.events.installerEvent.onEach {
             when (it) {
-                is InstallerEvent.Installed -> deleteUpdate(it.packageName)
+                is InstallerEvent.Installed -> {
+                    Log.i(TAG, "InstallerEvent.Installed received for ${it.packageName}, cleaning up...")
+                    deleteUpdate(it.packageName)
+                    // Clear download entry so it doesn't show "Installing" perpetually
+                    downloadDao.delete(it.packageName)
+                    Log.i(TAG, "Download entry deleted for ${it.packageName}")
+                    // Also clear any dismissed entries for this package since it's now updated
+                    dismissedUpdateDao.deleteForPackage(it.packageName)
+                }
                 is InstallerEvent.Uninstalled -> deleteUpdate(it.packageName)
+                is InstallerEvent.Failed -> {
+                    // Dismiss failed updates so they don't keep showing
+                    val update = updateDao.updates().firstOrNull()?.find { u -> u.packageName == it.packageName }
+                    if (update != null) {
+                        Log.d(TAG, "Install failed for ${it.packageName}, dismissing update")
+                        dismissedUpdateDao.insert(DismissedUpdate(update.packageName, update.versionCode))
+                    }
+                }
                 else -> {}
             }
         }.launchIn(AuroraApp.scope)

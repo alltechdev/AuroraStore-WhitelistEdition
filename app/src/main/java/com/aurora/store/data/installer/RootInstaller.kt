@@ -59,10 +59,12 @@ class RootInstaller @Inject constructor(
     private val TAG = RootInstaller::class.java.simpleName
 
     override fun install(download: Download) {
+        Log.i(TAG, "RootInstaller.install() called for ${download.packageName}")
         if (isAlreadyQueued(download.packageName)) {
             Log.i(TAG, "${download.packageName} already queued")
         } else {
             if (Shell.getShell().isRoot) {
+                Log.i(TAG, "Root access confirmed, starting install for ${download.packageName}")
                 download.sharedLibs.forEach {
                     // Shared library packages cannot be updated
                     if (!isSharedLibraryInstalled(context, it.packageName, it.versionCode)) {
@@ -82,16 +84,19 @@ class RootInstaller @Inject constructor(
     }
 
     private fun xInstall(packageName: String, versionCode: Long, sharedLibPkgName: String = "") {
+        Log.i(TAG, "xInstall starting for $packageName v$versionCode")
         var totalSize = 0
 
         for (file in getFiles(packageName, versionCode, sharedLibPkgName))
             totalSize += file.length().toInt()
 
+        Log.i(TAG, "Total size: $totalSize bytes")
         val result: Shell.Result =
             Shell.cmd("pm install-create -i $PLAY_PACKAGE_NAME --user 0 -r -S $totalSize")
                 .exec()
 
         val response = result.out
+        Log.i(TAG, "pm install-create response: $response")
 
         val sessionIdPattern = Pattern.compile("(\\d+)")
         val sessionIdMatcher = sessionIdPattern.matcher(response[0])
@@ -99,18 +104,23 @@ class RootInstaller @Inject constructor(
 
         if (found) {
             val sessionId = sessionIdMatcher.group(1)?.toInt()
+            Log.i(TAG, "Session ID: $sessionId")
             if (Shell.getShell().isRoot && sessionId != null) {
                 for (file in getFiles(packageName, versionCode, sharedLibPkgName)) {
+                    Log.i(TAG, "Writing file: ${file.name} (${file.length()} bytes)")
                     Shell.cmd("cat \"${file.absoluteFile}\" | pm install-write -S ${file.length()} $sessionId \"${file.name}\"")
                         .exec()
                 }
 
+                Log.i(TAG, "Committing install session $sessionId")
                 val shellResult = Shell.cmd("pm install-commit $sessionId").exec()
 
                 if (shellResult.isSuccess) {
+                    Log.i(TAG, "Install commit SUCCESS for $packageName")
                     // Installation is not yet finished if this is a shared library
                     if (packageName == download?.packageName) onInstallationSuccess()
                 } else {
+                    Log.e(TAG, "Install commit FAILED for $packageName: ${parseError(shellResult)}")
                     removeFromInstallQueue(packageName)
                     AuroraApp.events.send(
                         InstallerEvent.Failed(
@@ -120,6 +130,7 @@ class RootInstaller @Inject constructor(
                     )
                 }
             } else {
+                Log.e(TAG, "No root or no session ID")
                 removeFromInstallQueue(packageName)
                 postError(
                     packageName,
@@ -128,6 +139,7 @@ class RootInstaller @Inject constructor(
                 )
             }
         } else {
+            Log.e(TAG, "Failed to parse session ID from: $response")
             removeFromInstallQueue(packageName)
             postError(
                 packageName,

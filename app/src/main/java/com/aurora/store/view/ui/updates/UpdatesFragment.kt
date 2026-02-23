@@ -21,6 +21,7 @@ package com.aurora.store.view.ui.updates
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -33,6 +34,7 @@ import com.aurora.store.MobileNavigationDirections
 import com.aurora.store.R
 import com.aurora.store.compose.navigation.Screen
 import com.aurora.store.data.event.BusEvent
+import com.aurora.store.data.event.InstallerEvent
 import com.aurora.store.data.model.MinimalApp
 import com.aurora.store.data.model.PermissionType
 import com.aurora.store.data.providers.PermissionProvider.Companion.isGranted
@@ -54,6 +56,9 @@ import kotlinx.coroutines.launch
 class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
 
     private val viewModel: UpdatesViewModel by viewModels()
+
+    // Track app names for toast messages
+    private val appNames = mutableMapOf<String, String>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -79,7 +84,8 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
             viewModel.updates
                 .combine(viewModel.downloadsList) { uList, dList ->
                     uList?.associateWith { a ->
-                        dList.find { it.packageName == a.packageName && it.versionCode == a.versionCode }
+                        // Match by packageName only - there's only one download per package at a time
+                        dList.find { it.packageName == a.packageName }
                     }
                 }.collectLatest { map ->
                     updateController(map)
@@ -110,6 +116,36 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
             }
         }
 
+        // Listen for installer events to show toast
+        viewLifecycleOwner.lifecycleScope.launch {
+            AuroraApp.events.installerEvent.collect { event ->
+                android.util.Log.i("UpdatesFragment", "InstallerEvent received: $event")
+                when (event) {
+                    is InstallerEvent.Installed -> {
+                        val appName = appNames[event.packageName] ?: event.packageName
+                        android.util.Log.i("UpdatesFragment", "Showing toast for installed: $appName")
+                        Toast.makeText(
+                            requireContext(),
+                            "$appName updated",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        appNames.remove(event.packageName)
+                    }
+                    is InstallerEvent.Failed -> {
+                        val appName = appNames[event.packageName] ?: event.packageName
+                        android.util.Log.i("UpdatesFragment", "Showing toast for failed: $appName")
+                        Toast.makeText(
+                            requireContext(),
+                            "$appName update failed",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        appNames.remove(event.packageName)
+                    }
+                    else -> {}
+                }
+            }
+        }
+
         // Initial fetch when navigating to Updates tab
         viewModel.fetchUpdates()
     }
@@ -136,7 +172,9 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
                         NoAppViewModel_()
                             .id("no_update")
                             .icon(R.drawable.ic_updates)
-                            .message(R.string.details_no_updates)
+                            .message(R.string.check_updates)
+                            .showIcon(false)
+                            .showMessage(false)
                             .showAction(true)
                             .actionMessage(R.string.check_updates)
                             .actionCallback { _ -> viewModel.fetchUpdates() }
@@ -163,7 +201,9 @@ class UpdatesFragment : BaseFragment<FragmentUpdatesBinding>() {
     }
 
     private fun updateSingle(update: Update) {
-        android.util.Log.d("UpdatesFragment", "updateSingle clicked for ${update.packageName}, versionCode=${update.versionCode}, fileList=${update.fileList.size}")
+        // Save app name for toast message
+        appNames[update.packageName] = update.displayName
+
         if (update.fileList.requiresObbDir()) {
             if (isGranted(requireContext(), PermissionType.STORAGE_MANAGER)) {
                 viewModel.download(update)

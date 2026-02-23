@@ -95,9 +95,22 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/txt_line1"
         android:layout_alignStart="@+id/txt_line1"
-        android:layout_alignEnd="@id/btn_action"
+        android:layout_toStartOf="@id/btn_action"
         android:ellipsize="end"
         android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.Aurora.Line3" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/txt_status"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txt_line4"
+        android:layout_alignStart="@+id/txt_line1"
+        android:layout_toStartOf="@id/btn_action"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:visibility="gone"
+        android:textColor="?colorPrimary"
         android:textAppearance="@style/TextAppearance.Aurora.Line3" />
 
     <com.google.android.material.button.MaterialButton

@@ -60,6 +60,18 @@ class NoAppView @JvmOverloads constructor(
 
     @JvmOverloads
     @ModelProp
+    fun showIcon(visibility: Boolean = true) {
+        binding.img.isVisible = visibility
+    }
+
+    @JvmOverloads
+    @ModelProp
+    fun showMessage(visibility: Boolean = true) {
+        binding.txt.isVisible = visibility
+    }
+
+    @JvmOverloads
+    @ModelProp
     fun actionMessage(@StringRes message: Int? = null) {
         message?.let { binding.button.text = context.getString(message) }
     }

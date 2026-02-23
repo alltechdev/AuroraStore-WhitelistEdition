@@ -103,24 +103,50 @@ class AppUpdateView @JvmOverloads constructor(
     fun download(download: Download?) {
         if (download != null) {
             binding.btnAction.updateState(download.downloadStatus)
+            binding.txtStatus.visibility = View.VISIBLE
             when (download.downloadStatus) {
-                DownloadStatus.VERIFYING,
                 DownloadStatus.QUEUED -> {
                     binding.progressDownload.isIndeterminate = true
+                    binding.txtStatus.text = context.getString(R.string.status_queued)
                     animateImageView(scaleFactor = 0.75f)
                 }
 
                 DownloadStatus.DOWNLOADING -> {
                     binding.progressDownload.isIndeterminate = false
                     binding.progressDownload.progress = download.progress
+                    binding.txtStatus.text = context.getString(R.string.status_downloading) + " ${download.progress}%"
                     animateImageView(scaleFactor = 0.75f)
                 }
 
-                else -> {
+                DownloadStatus.VERIFYING -> {
                     binding.progressDownload.isIndeterminate = true
+                    binding.txtStatus.text = context.getString(R.string.status_verifying)
+                    animateImageView(scaleFactor = 0.75f)
+                }
+
+                DownloadStatus.COMPLETED -> {
+                    binding.progressDownload.isIndeterminate = true
+                    binding.txtStatus.text = context.getString(R.string.action_installing)
+                    animateImageView(scaleFactor = 0.75f)
+                }
+
+                DownloadStatus.FAILED -> {
+                    binding.txtStatus.text = context.getString(R.string.status_failed)
+                    animateImageView(scaleFactor = 1f)
+                }
+
+                DownloadStatus.CANCELLED -> {
+                    binding.txtStatus.text = context.getString(R.string.status_cancelled)
+                    animateImageView(scaleFactor = 1f)
+                }
+
+                else -> {
+                    binding.txtStatus.visibility = View.GONE
                     animateImageView(scaleFactor = 1f)
                 }
             }
+        } else {
+            binding.txtStatus.visibility = View.GONE
         }
     }
 
