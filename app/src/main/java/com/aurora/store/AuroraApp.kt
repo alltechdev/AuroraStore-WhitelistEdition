@@ -47,6 +47,7 @@ import com.aurora.store.util.Preferences
 import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -69,6 +70,9 @@ class AuroraApp : Application(), Configuration.Provider, SingletonImageLoader.Fa
 
     @Inject
     lateinit var remoteWhitelistProvider: RemoteWhitelistProvider
+
+    @Inject
+    lateinit var downloadDao: com.aurora.store.data.room.download.DownloadDao
     
     private var whitelistUpdateHandler: Handler? = null
     private var whitelistUpdateRunnable: Runnable? = null
@@ -85,6 +89,9 @@ class AuroraApp : Application(), Configuration.Provider, SingletonImageLoader.Fa
 
         val enqueuedInstalls: MutableSet<String> = mutableSetOf()
         val events = EventFlow()
+
+        // Map of package names to display names for toast messages
+        val appNames = mutableMapOf<String, String>()
     }
 
     override fun onCreate() {
@@ -101,6 +108,19 @@ class AuroraApp : Application(), Configuration.Provider, SingletonImageLoader.Fa
 
         //Create Notification Channels
         NotificationUtil.createNotificationChannel(this)
+
+        // Cancel any scheduled periodic update workers (MJZ Updater only does manual checks)
+        updateHelper.cancelAutomatedCheck()
+
+        // Clear any stale queued downloads from previous sessions
+        scope.launch {
+            downloadDao.downloads().firstOrNull()
+                ?.filter { it.downloadStatus == com.aurora.store.data.model.DownloadStatus.QUEUED }
+                ?.forEach { download ->
+                    android.util.Log.i("AuroraApp", "Clearing stale queued download: ${download.packageName}")
+                    downloadDao.delete(download.packageName)
+                }
+        }
 
         // Initialize Download and Update helpers to observe and trigger downloads
         downloadHelper.init()

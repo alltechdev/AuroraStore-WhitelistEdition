@@ -161,9 +161,14 @@ data class ExternalApp(
         /**
          * Convert version string to version code for comparison
          * Example: "1.2.3" -> 10203, "5.4.3" -> 50403
+         * Plain numbers like "250" are used as raw versionCode
          */
         private fun parseVersionCode(versionName: String): Long {
             return try {
+                // If no dots, treat as raw versionCode
+                if (!versionName.contains(".")) {
+                    return versionName.toLongOrNull() ?: 0L
+                }
                 val parts = versionName.split(".")
                 val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
                 val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0

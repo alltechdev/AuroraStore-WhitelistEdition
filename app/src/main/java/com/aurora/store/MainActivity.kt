@@ -39,7 +39,6 @@ import com.aurora.store.data.receiver.MigrationReceiver
 import com.aurora.store.databinding.ActivityMainBinding
 import com.aurora.store.util.PackageUtil
 import com.aurora.store.util.Preferences
-import com.aurora.store.util.Preferences.PREFERENCE_DEFAULT_SELECTED_TAB
 import com.aurora.store.view.ui.sheets.NetworkDialogSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -112,17 +111,10 @@ class MainActivity : AppCompatActivity() {
         B.navView.setupWithNavController(navController)
 
         // Handle quick exit from back actions
-        val defaultTab = when (Preferences.getInteger(this, PREFERENCE_DEFAULT_SELECTED_TAB)) {
-            1 -> R.id.updatesFragment
-            else -> R.id.appsContainerFragment
-        }
+        // In single-tab mode, pressing back on updatesFragment should exit the app
         onBackPressedDispatcher.addCallback(this) {
             if (navController.currentDestination?.id in topLevelFrags) {
-                if (navController.currentDestination?.id == defaultTab) {
-                    finish()
-                } else {
-                    navController.navigate(defaultTab)
-                }
+                finish()
             } else if (navHostFragment.childFragmentManager.backStackEntryCount == 0) {
                 // We are on either on onboarding or splash fragment
                 finish()

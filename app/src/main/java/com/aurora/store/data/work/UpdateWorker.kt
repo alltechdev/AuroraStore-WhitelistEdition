@@ -78,15 +78,11 @@ class UpdateWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         super.doWork()
 
-        Log.i(TAG, "Checking for app updates")
-        val updateMode = UpdateMode.entries[inputData.getInt(
-            UpdateHelper.UPDATE_MODE,
-            Preferences.getInteger(
-                context,
-                PREFERENCE_UPDATES_AUTO,
-                UpdateMode.DISABLED.ordinal
-            )
-        )]
+        val inputUpdateMode = inputData.getInt(UpdateHelper.UPDATE_MODE, -1)
+        val prefUpdateMode = Preferences.getInteger(context, PREFERENCE_UPDATES_AUTO, UpdateMode.DISABLED.ordinal)
+        val updateMode = UpdateMode.entries[if (inputUpdateMode >= 0) inputUpdateMode else prefUpdateMode]
+
+        Log.i(TAG, "Checking for app updates (inputMode=$inputUpdateMode, prefMode=$prefUpdateMode, effectiveMode=$updateMode)")
 
         if (updateMode == UpdateMode.DISABLED) {
             Log.i(TAG, "Updates are disabled, bailing out!")
@@ -116,9 +112,11 @@ class UpdateWorker @AssistedInject constructor(
                 .filter { if (!isExtendedUpdateEnabled) it.hasValidCert else true }
 
             if (updates.isEmpty() || updateMode == UpdateMode.CHECK_ONLY) {
-                Log.i(TAG, "Found ${updates.size} updates")
+                Log.i(TAG, "Found ${updates.size} updates, CHECK_ONLY mode - NOT downloading")
                 return Result.success()
             }
+
+            Log.i(TAG, "Found ${updates.size} updates, mode=$updateMode - proceeding to download logic")
 
             // Notify and exit if we are only checking for updates or if battery optimizations are enabled
             if (updateMode == UpdateMode.CHECK_AND_NOTIFY || !context.isIgnoringBatteryOptimizations()) {
@@ -140,6 +138,7 @@ class UpdateWorker @AssistedInject constructor(
             notifyUpdates(filteredUpdates.second)
 
             // Trigger download for apps if they can be auto-updated
+            Log.i(TAG, "AUTO-INSTALLING ${filteredUpdates.first.size} apps: ${filteredUpdates.first.map { it.packageName }}")
             filteredUpdates.first.forEach { downloadHelper.enqueueUpdate(it) }
 
             return Result.success()
@@ -204,20 +203,26 @@ class UpdateWorker @AssistedInject constructor(
 
     /**
      * Check for updates for external apps (non-Play Store)
+     * Uses our own versioning system stored in SharedPreferences, not the app's internal versionCode
      */
     private suspend fun checkExternalAppUpdates(): List<App> {
         val externalApps = whitelistProvider.getExternalApps()
         val updates = mutableListOf<App>()
+        val prefs = context.getSharedPreferences("external_apps", android.content.Context.MODE_PRIVATE)
 
         externalApps.forEach { externalApp ->
             // Check if app is installed
             try {
-                val packageInfo = context.packageManager.getPackageInfo(externalApp.packageName, 0)
-                val installedVersion = PackageInfoCompat.getLongVersionCode(packageInfo)
+                context.packageManager.getPackageInfo(externalApp.packageName, 0)
+
+                // Use our stored version, not the app's actual versionCode
+                val installedVersion = prefs.getLong("${externalApp.packageName}_version", 0L)
 
                 if (externalApp.versionCode > installedVersion) {
-                    Log.d(TAG, "External app update available: ${externalApp.displayName} (${installedVersion} -> ${externalApp.versionCode})")
+                    Log.d(TAG, "External app update available: ${externalApp.displayName} (stored: ${installedVersion} -> whitelist: ${externalApp.versionCode})")
                     updates.add(externalApp.toApp(context, appDetailsHelper))
+                } else {
+                    Log.d(TAG, "External app up to date: ${externalApp.displayName} (stored: ${installedVersion}, whitelist: ${externalApp.versionCode})")
                 }
             } catch (e: Exception) {
                 // App not installed, skip
