@@ -159,8 +159,15 @@ class UpdateHelper @Inject constructor(
      * Checks for updates using an expedited worker
      */
     fun checkUpdatesNow() {
+        checkUpdatesNow(UpdateMode.CHECK_ONLY)
+    }
+
+    /**
+     * Checks for updates using an expedited worker with specified mode
+     */
+    fun checkUpdatesNow(mode: UpdateMode) {
         val inputData = Data.Builder()
-            .putInt(UPDATE_MODE, UpdateMode.CHECK_ONLY.ordinal)
+            .putInt(UPDATE_MODE, mode.ordinal)
             .build()
 
         val work = OneTimeWorkRequestBuilder<UpdateWorker>()

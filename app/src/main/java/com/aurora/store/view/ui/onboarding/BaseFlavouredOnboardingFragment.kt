@@ -239,12 +239,11 @@ abstract class BaseFlavouredOnboardingFragment : BaseFragment<FragmentOnboarding
     }
 
     open fun setupAutoUpdates() {
-        // MJZ Updater: Always keep auto-updates disabled
-        // User must manually click Update button
-        save(PREFERENCE_UPDATES_AUTO, UpdateMode.DISABLED.ordinal)
+        // Zemer Updater: Check for updates and notify
+        save(PREFERENCE_UPDATES_AUTO, UpdateMode.CHECK_AND_NOTIFY.ordinal)
 
-        // Don't schedule automated checks - MJZ Updater is manual-only
-        // onboardingViewModel.updateHelper.scheduleAutomatedCheck()
+        // Schedule periodic update checks
+        onboardingViewModel.updateHelper.scheduleAutomatedCheck()
     }
 
     internal class PagerAdapter(
